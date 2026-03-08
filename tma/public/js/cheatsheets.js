@@ -1,48 +1,23 @@
 // tma/public/js/cheatsheets.js
 
-// Данные (временно в коде, потом загрузим из JSON)
-const CHEATSHEETS_DATA = {
-    terminal: {
-        title: "Команды терминала",
-        items: [
-            { command: "cd", description: "Узнать текущую папку (Windows)", example: "cd" },
-            { command: "pwd", description: "Узнать текущую папку (macOS/Linux)", example: "pwd" },
-            { command: "ls", description: "Список файлов (macOS/Linux)", example: "ls" },
-            { command: "dir", description: "Список файлов (Windows)", example: "dir" },
-            { command: "mkdir название", description: "Создать папку", example: "mkdir my-project" },
-            { command: "cd название", description: "Перейти в папку", example: "cd my-project" },
-            { command: "cd ..", description: "Вернуться на уровень вверх", example: "cd .." }
-        ]
-    },
-    git: {
-        title: "Основные команды Git",
-        items: [
-            { command: "git init", description: "Инициализировать репозиторий", example: "git init" },
-            { command: "git add .", description: "Добавить все файлы", example: "git add ." },
-            { command: "git commit -m 'текст'", description: "Сохранить изменения", example: "git commit -m 'Initial commit'" },
-            { command: "git push", description: "Отправить на GitHub", example: "git push origin main" },
-            { command: "git status", description: "Статус файлов", example: "git status" }
-        ]
-    },
-    links: {
-        title: "Полезные ссылки",
-        items: [
-            { name: "ChatGPT", url: "https://chat.openai.com", description: "AI-ассистент OpenAI" },
-            { name: "Claude", url: "https://claude.ai", description: "AI-ассистент Anthropic" },
-            { name: "VS Code", url: "https://code.visualstudio.com", description: "Редактор кода" },
-            { name: "Node.js", url: "https://nodejs.org", description: "JavaScript runtime" },
-            { name: "Vercel", url: "https://vercel.com", description: "Деплой проектов" },
-            { name: "GitHub", url: "https://github.com", description: "Хранение кода" }
-        ]
+let cheatsheetsData = {};
+
+async function loadCheatsheets() {
+    try {
+        const response = await fetch('data/cheatsheets.json');
+        cheatsheetsData = await response.json();
+        switchTab('terminal');
+    } catch (err) {
+        console.error('Ошибка загрузки шпаргалок:', err);
     }
-};
+}
 
 // Текущий активный таб
 let currentTab = 'terminal';
 
 // 1. Функция switchTab(tabName)
 function switchTab(tabName) {
-    if (!CHEATSHEETS_DATA[tabName]) return;
+    if (!cheatsheetsData[tabName]) return;
 
     currentTab = tabName;
 
@@ -69,7 +44,7 @@ function switchTab(tabName) {
 // 2. Функция renderCheatsheet(tabName)
 function renderCheatsheet(tabName) {
     const container = document.getElementById('cheatsheets-container');
-    const data = CHEATSHEETS_DATA[tabName];
+    const data = cheatsheetsData[tabName];
 
     if (!data) return;
 
@@ -187,8 +162,8 @@ function goBack() {
 
 // 7. Инициализация
 document.addEventListener('DOMContentLoaded', () => {
-    // Включаем первую вкладку по умолчанию
-    switchTab('terminal');
+    // Загружаем данные и включаем первую вкладку
+    loadCheatsheets();
 
     // Настраиваем кнопку "Назад" в Telegram
     if (typeof setupBackButton === 'function') setupBackButton();

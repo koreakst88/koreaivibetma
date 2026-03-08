@@ -1,22 +1,16 @@
 // tma/public/js/prompts.js
 
-// Данные (временно в коде, потом загрузим из JSON)
-const PROMPTS_DATA = [
-    {
-        id: 1,
-        title: "Первая веб-страница Hello World",
-        day: "day0",
-        category: "Создание",
-        prompt: "Создай простую веб-страницу \"Hello World\" с красивым дизайном.\n\nТребования:\n- HTML файл с именем index.html\n- Заголовок: \"Привет, мир!\"\n- Кнопка \"Нажми меня\" (при клике alert)\n- Современный дизайн (градиент, центрирование)\n- Всё в одном файле"
-    },
-    {
-        id: 2,
-        title: "Изменение дизайна страницы",
-        day: "day0",
-        category: "Итерация",
-        prompt: "Измени эту страницу:\n1. Градиент оранжево-розовый\n2. Добавь эмодзи 👋 к заголовку\n3. Кнопка зелёная с белым текстом\n4. При наведении кнопка поворачивается"
+let promptsData = [];
+
+async function loadPrompts() {
+    try {
+        const response = await fetch('data/prompts.json');
+        promptsData = await response.json();
+        renderPrompts(promptsData);
+    } catch (err) {
+        console.error('Ошибка загрузки промптов:', err);
     }
-];
+}
 
 // Объект для отслеживания состояния (свернуто/развернуто)
 const promptStates = {};
@@ -84,7 +78,7 @@ function togglePrompt(promptId) {
 
 // 3. Функция copyPrompt(promptId)
 function copyPrompt(promptId) {
-    const promptData = PROMPTS_DATA.find(p => p.id === promptId);
+    const promptData = promptsData.find(p => p.id === promptId);
     if (!promptData) return;
 
     // Копирование в буфер обмена
@@ -109,11 +103,11 @@ function searchPrompts() {
     const query = searchInput.value.toLowerCase().trim();
 
     if (!query) {
-        renderPrompts(PROMPTS_DATA);
+        renderPrompts(promptsData);
         return;
     }
 
-    const filtered = PROMPTS_DATA.filter(p => {
+    const filtered = promptsData.filter(p => {
         return p.title.toLowerCase().includes(query) ||
             p.id.toString() === query ||
             p.category.toLowerCase().includes(query);
@@ -150,7 +144,7 @@ function goBack() {
 // 7. Инициализация
 document.addEventListener('DOMContentLoaded', () => {
     // Рендер изначальных данных
-    renderPrompts(PROMPTS_DATA);
+    loadPrompts();
 
     // Настройка кнопки назад
     if (typeof setupBackButton === 'function') {

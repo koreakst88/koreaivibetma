@@ -1,0 +1,462 @@
+{
+  "terminal": {
+    "title": "Команды терминала",
+    "items": [
+      {
+        "command": "cd путь/к/папке",
+        "description": "Перейти в папку",
+        "example": "cd Desktop"
+      },
+      {
+        "command": "cd ..",
+        "description": "Вернуться на уровень вверх",
+        "example": "cd .."
+      },
+      {
+        "command": "cd ~ (macOS) / cd %USERPROFILE% (Win)",
+        "description": "Вернуться в домашнюю папку",
+        "example": "cd ~"
+      },
+      {
+        "command": "pwd (macOS) / cd (Win)",
+        "description": "Показать текущую папку",
+        "example": "pwd"
+      },
+      {
+        "command": "ls (macOS) / dir (Win)",
+        "description": "Список файлов",
+        "example": "ls"
+      },
+      {
+        "command": "ls -la (macOS) / dir /a (Win)",
+        "description": "Список файлов (подробно)",
+        "example": "ls -la"
+      },
+      {
+        "command": "mkdir имя_папки",
+        "description": "Создать папку",
+        "example": "mkdir my-project"
+      },
+      {
+        "command": "touch имя.txt (macOS) / type nul > имя.txt (Win)",
+        "description": "Создать файл",
+        "example": "touch index.html"
+      },
+      {
+        "command": "cp файл1 файл2 (macOS) / copy файл1 файл2 (Win)",
+        "description": "Копировать файл",
+        "example": "cp index.html backup.html"
+      },
+      {
+        "command": "mv файл1 путь/ (macOS) / move файл1 путь/ (Win)",
+        "description": "Переместить файл",
+        "example": "mv file.txt folder/"
+      },
+      {
+        "command": "rm имя.txt (macOS) / del имя.txt (Win)",
+        "description": "Удалить файл",
+        "example": "rm old.txt"
+      },
+      {
+        "command": "rm -rf папка (macOS) / rmdir /s папка (Win)",
+        "description": "Удалить папку",
+        "example": "rm -rf old-folder"
+      },
+      {
+        "command": "node -v",
+        "description": "Проверить версию Node.js",
+        "example": "node -v"
+      },
+      {
+        "command": "npm -v",
+        "description": "Проверить версию npm",
+        "example": "npm -v"
+      },
+      {
+        "command": "git --version",
+        "description": "Проверить версию Git",
+        "example": "git --version"
+      },
+      {
+        "command": "clear (macOS) / cls (Win)",
+        "description": "Очистить терминал",
+        "example": "clear"
+      }
+    ]
+  },
+  "git": {
+    "title": "Git команды",
+    "items": [
+      {
+        "command": "git init",
+        "description": "Инициализировать Git репозиторий",
+        "example": "git init"
+      },
+      {
+        "command": "git status",
+        "description": "Проверить статус (какие файлы изменены)",
+        "example": "git status"
+      },
+      {
+        "command": "git add .",
+        "description": "Добавить все файлы в индекс",
+        "example": "git add ."
+      },
+      {
+        "command": "git add имя_файла",
+        "description": "Добавить конкретный файл",
+        "example": "git add index.html"
+      },
+      {
+        "command": "git commit -m \"Сообщение\"",
+        "description": "Создать коммит с описанием",
+        "example": "git commit -m \"Add cart page\""
+      },
+      {
+        "command": "git push",
+        "description": "Отправить изменения на GitHub",
+        "example": "git push"
+      },
+      {
+        "command": "git pull",
+        "description": "Получить изменения с GitHub",
+        "example": "git pull"
+      },
+      {
+        "command": "git branch",
+        "description": "Показать все ветки",
+        "example": "git branch"
+      },
+      {
+        "command": "git branch имя_ветки",
+        "description": "Создать новую ветку",
+        "example": "git branch feature"
+      },
+      {
+        "command": "git checkout имя_ветки",
+        "description": "Переключиться на ветку",
+        "example": "git checkout main"
+      },
+      {
+        "command": "git checkout -b имя_ветки",
+        "description": "Создать и переключиться на ветку",
+        "example": "git checkout -b develop"
+      },
+      {
+        "command": "git merge имя_ветки",
+        "description": "Слить ветки",
+        "example": "git merge feature"
+      },
+      {
+        "command": "git log",
+        "description": "Показать историю коммитов",
+        "example": "git log"
+      },
+      {
+        "command": "git log --oneline",
+        "description": "Краткая история коммитов",
+        "example": "git log --oneline"
+      },
+      {
+        "command": "git remote add origin URL",
+        "description": "Добавить удалённый репозиторий",
+        "example": "git remote add origin https://github.com/user/repo.git"
+      },
+      {
+        "command": "git push -u origin main",
+        "description": "Первая отправка на GitHub",
+        "example": "git push -u origin main"
+      }
+    ]
+  },
+  "vscode": {
+    "title": "Горячие клавиши VS Code",
+    "items": [
+      {
+        "command": "Ctrl+S (Win) / Cmd+S (Mac)",
+        "description": "Сохранить файл",
+        "example": "Ctrl+S"
+      },
+      {
+        "command": "Ctrl+Z (Win) / Cmd+Z (Mac)",
+        "description": "Отменить",
+        "example": "Ctrl+Z"
+      },
+      {
+        "command": "Ctrl+Y (Win) / Cmd+Shift+Z (Mac)",
+        "description": "Вернуть",
+        "example": "Ctrl+Y"
+      },
+      {
+        "command": "Ctrl+A (Win) / Cmd+A (Mac)",
+        "description": "Выделить всё",
+        "example": "Ctrl+A"
+      },
+      {
+        "command": "Ctrl+C (Win) / Cmd+C (Mac)",
+        "description": "Копировать",
+        "example": "Ctrl+C"
+      },
+      {
+        "command": "Ctrl+V (Win) / Cmd+V (Mac)",
+        "description": "Вставить",
+        "example": "Ctrl+V"
+      },
+      {
+        "command": "Ctrl+X (Win) / Cmd+X (Mac)",
+        "description": "Вырезать",
+        "example": "Ctrl+X"
+      },
+      {
+        "command": "Ctrl+F (Win) / Cmd+F (Mac)",
+        "description": "Найти",
+        "example": "Ctrl+F"
+      },
+      {
+        "command": "Ctrl+H (Win) / Cmd+H (Mac)",
+        "description": "Найти и заменить",
+        "example": "Ctrl+H"
+      },
+      {
+        "command": "Ctrl+W (Win) / Cmd+W (Mac)",
+        "description": "Закрыть файл",
+        "example": "Ctrl+W"
+      },
+      {
+        "command": "Ctrl+G (Win) / Cmd+G (Mac)",
+        "description": "Перейти к строке",
+        "example": "Ctrl+G"
+      },
+      {
+        "command": "Ctrl+P (Win) / Cmd+P (Mac)",
+        "description": "Перейти к файлу",
+        "example": "Ctrl+P"
+      },
+      {
+        "command": "Ctrl+` (Win) / Cmd+` (Mac)",
+        "description": "Открыть терминал",
+        "example": "Ctrl+`"
+      },
+      {
+        "command": "Ctrl+\\ (Win) / Cmd+\\ (Mac)",
+        "description": "Разделить редактор",
+        "example": "Ctrl+\\"
+      },
+      {
+        "command": "Ctrl+Tab (Win) / Cmd+Option+→/← (Mac)",
+        "description": "Переключить вкладку",
+        "example": "Ctrl+Tab"
+      },
+      {
+        "command": "Shift+Alt+↓ (Win) / Shift+Option+↓ (Mac)",
+        "description": "Дублировать строку",
+        "example": "Shift+Alt+↓"
+      },
+      {
+        "command": "Ctrl+Shift+K (Win) / Cmd+Shift+K (Mac)",
+        "description": "Удалить строку",
+        "example": "Ctrl+Shift+K"
+      },
+      {
+        "command": "Alt+↓/↑ (Win) / Option+↓/↑ (Mac)",
+        "description": "Переместить строку",
+        "example": "Alt+↓"
+      },
+      {
+        "command": "Shift+Alt+F (Win) / Shift+Option+F (Mac)",
+        "description": "Форматировать код",
+        "example": "Shift+Alt+F"
+      },
+      {
+        "command": "Ctrl+Shift+P (Win) / Cmd+Shift+P (Mac)",
+        "description": "Показать палитру команд",
+        "example": "Ctrl+Shift+P"
+      },
+      {
+        "command": "Ctrl+, (Win) / Cmd+, (Mac)",
+        "description": "Открыть настройки",
+        "example": "Ctrl+,"
+      },
+      {
+        "command": "F11 (Win) / Ctrl+Cmd+F (Mac)",
+        "description": "Полноэкранный режим",
+        "example": "F11"
+      },
+      {
+        "command": "Ctrl+B (Win) / Cmd+B (Mac)",
+        "description": "Боковая панель",
+        "example": "Ctrl+B"
+      }
+    ]
+  },
+  "links": {
+    "title": "Полезные ссылки",
+    "items": [
+      {
+        "name": "Telegram Bot API",
+        "url": "https://core.telegram.org/bots/api",
+        "description": "Полная документация по Bot API"
+      },
+      {
+        "name": "Telegram WebApp SDK",
+        "url": "https://core.telegram.org/bots/webapps",
+        "description": "Документация по Mini Apps SDK"
+      },
+      {
+        "name": "Telegram Payments",
+        "url": "https://core.telegram.org/bots/payments",
+        "description": "Платежи в Telegram"
+      },
+      {
+        "name": "Telegram Stars",
+        "url": "https://telegram.org/blog/telegram-stars",
+        "description": "Внутренняя валюта Telegram"
+      },
+      {
+        "name": "@BotFather",
+        "url": "https://t.me/BotFather",
+        "description": "Создание и управление ботами"
+      },
+      {
+        "name": "Vercel Documentation",
+        "url": "https://vercel.com/docs",
+        "description": "Полная документация Vercel"
+      },
+      {
+        "name": "Make Documentation",
+        "url": "https://www.make.com/en/documentation",
+        "description": "Полная документация Make"
+      },
+      {
+        "name": "Google Analytics",
+        "url": "https://analytics.google.com",
+        "description": "Веб-аналитика"
+      },
+      {
+        "name": "GA4 Documentation",
+        "url": "https://support.google.com/analytics/answer/10089681",
+        "description": "Документация GA4"
+      },
+      {
+        "name": "Google Apps Script",
+        "url": "https://script.google.com",
+        "description": "Автоматизация Google"
+      },
+      {
+        "name": "Git Documentation",
+        "url": "https://git-scm.com/doc",
+        "description": "Официальная документация Git"
+      },
+      {
+        "name": "GitHub Docs",
+        "url": "https://docs.github.com",
+        "description": "Документация GitHub"
+      },
+      {
+        "name": "ChatGPT",
+        "url": "https://chat.openai.com",
+        "description": "ИИ от OpenAI"
+      },
+      {
+        "name": "Claude",
+        "url": "https://claude.ai",
+        "description": "ИИ от Anthropic"
+      },
+      {
+        "name": "Cline (VS Code)",
+        "url": "https://marketplace.visualstudio.com/items?itemName=saoudrizwan.claude-dev",
+        "description": "Расширение для VS Code"
+      },
+      {
+        "name": "MDN Web Docs",
+        "url": "https://developer.mozilla.org",
+        "description": "Документация по веб-технологиям"
+      },
+      {
+        "name": "W3Schools",
+        "url": "https://www.w3schools.com",
+        "description": "Учебник по HTML, CSS, JavaScript"
+      },
+      {
+        "name": "Color Hunt",
+        "url": "https://colorhunt.co",
+        "description": "Подбор цветовых схем"
+      },
+      {
+        "name": "Unsplash",
+        "url": "https://unsplash.com",
+        "description": "Бесплатные изображения"
+      },
+      {
+        "name": "Font Awesome",
+        "url": "https://fontawesome.com",
+        "description": "Иконки для веба"
+      },
+      {
+        "name": "Stack Overflow",
+        "url": "https://stackoverflow.com",
+        "description": "Вопросы и ответы по программированию"
+      },
+      {
+        "name": "Habr",
+        "url": "https://habr.com",
+        "description": "Статьи о технологиях (RU)"
+      }
+    ]
+  },
+  "troubleshooting": {
+    "title": "Решение проблем",
+    "items": [
+      {
+        "command": "git: command not found",
+        "description": "Git не установлен или не в PATH",
+        "example": "Установить Git с https://git-scm.com или проверить путь: which git (macOS) / where git (Win)"
+      },
+      {
+        "command": "Permission denied (publickey)",
+        "description": "SSH ключ не настроен",
+        "example": "Создать SSH ключ: ssh-keygen -t ed25519 -C \"email@example.com\" и добавить в GitHub Settings → SSH keys"
+      },
+      {
+        "command": "Failed to connect to GitHub",
+        "description": "Проблемы с сетью или firewall",
+        "example": "Проверить подключение: ping github.com или использовать HTTPS вместо SSH"
+      },
+      {
+        "command": "Changes not staged for commit",
+        "description": "Файлы не добавлены в индекс",
+        "example": "Добавить файлы: git add . и проверить статус: git status"
+      },
+      {
+        "command": "Merge conflict",
+        "description": "Конфликт слияния",
+        "example": "Найти файлы с конфликтами (git status), исправить вручную, удалить маркеры <<<<<<<, =======, >>>>>>>, затем: git add файл и git commit"
+      },
+      {
+        "command": "Vercel deployment failed",
+        "description": "Ошибка деплоя на Vercel",
+        "example": "Проверить логи в Vercel Dashboard, убедиться что index.html в правильной папке, указать Root Directory в настройках"
+      },
+      {
+        "command": "Mini App не открывается в Telegram",
+        "description": "Неправильная ссылка или настройки бота",
+        "example": "Проверить ссылку в @BotFather (должна начинаться с https://), убедиться что Vercel деплой успешен (Ready)"
+      },
+      {
+        "command": "LocalStorage не работает",
+        "description": "LocalStorage недоступен",
+        "example": "Проверить доступность: try { localStorage.setItem('test', 'test'); } catch(e) { console.log('Недоступен'); }. Альтернатива: sessionStorage или Cookies"
+      },
+      {
+        "command": "Cline не отвечает",
+        "description": "Расширение Cline не работает",
+        "example": "Перезагрузить VS Code (Developer: Reload Window), проверить API ключ в настройках Cline, обновить расширение"
+      },
+      {
+        "command": "Telegram SDK не работает",
+        "description": "SDK не инициализирован или открыто вне Telegram",
+        "example": "Проверить: if (Telegram.WebApp.initDataUnsafe.user) { console.log('В Telegram'); } else { console.log('Вне Telegram'); }. Убедиться что SDK подключён в <head>"
+      }
+    ]
+  }
+}
