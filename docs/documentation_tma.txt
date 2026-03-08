@@ -1,0 +1,1484 @@
+FILE: TMA-DOCUMENTATION.md
+markdown# ДОКУМЕНТАЦИЯ: TELEGRAM MINI APP ДЛЯ КУРСА "КАК СОЗДАВАТЬ ЦИФРОВЫЕ ПРОЕКТЫ С ПОМОЩЬЮ ИИ"
+
+**Версия:** 1.0  
+**Дата:** Март 2026  
+**Автор:** Документация для разработки образовательного TMA
+
+---
+
+## 📋 СОДЕРЖАНИЕ
+
+1. [Обзор проекта](#обзор-проекта)
+2. [Архитектура](#архитектура)
+3. [Технический стек](#технический-стек)
+4. [Структура файлов](#структура-файлов)
+5. [Frontend (TMA)](#frontend-tma)
+6. [Backend (Telegram Bot)](#backend-telegram-bot)
+7. [Контроль доступа](#контроль-доступа)
+8. [Deployment](#deployment)
+9. [Обслуживание и обновление](#обслуживание-и-обновление)
+10. [Roadmap и будущие улучшения](#roadmap-и-будущие-улучшения)
+
+---
+
+## ОБЗОР ПРОЕКТА
+
+### Назначение
+
+Telegram Mini App для доставки образовательных материалов курса "Как создавать цифровые проекты с помощью ИИ".
+
+### Ключевые особенности
+
+- 📚 Материалы курса по 7 дням обучения
+- 🔒 Постепенное открытие доступа через коды разблокировки
+- 📖 Библиотека из 14+ готовых промптов
+- 📋 Шпаргалки и чек-листы
+- ✅ Интерактивные чек-листы с сохранением прогресса
+- 💬 Прямая связь с преподавателем
+- 📱 Адаптация под тему Telegram (светлая/тёмная)
+
+### Целевая аудитория
+
+Ученики курса — новички без опыта программирования, изучающие Vibe Coding.
+
+### Формат использования
+
+- **Преподаватель:** Проводит индивидуальную встречу → даёт код доступа
+- **Ученик:** Вводит код в боте → открывается новый день → изучает материалы в TMA
+
+---
+
+## АРХИТЕКТУРА
+
+### Общая схема
+```
+┌─────────────────────────────────────────────┐
+│                                             │
+│  УЧЕНИК                                     │
+│  ├─ Telegram (на телефоне/десктопе)        │
+│  ├─ Бот @YourCourseBot                     │
+│  │   ├─ /start → Приветствие               │
+│  │   ├─ /unlock → Ввод кода                │
+│  │   └─ Кнопка "Открыть курс" (Web App)    │
+│  │                                          │
+│  └─ TMA (Vercel)                            │
+│      ├─ Главная (список дней)              │
+│      ├─ Страница дня (материалы)           │
+│      ├─ Библиотека промптов                │
+│      └─ Шпаргалки                           │
+│                                             │
+└─────────────────────────────────────────────┘
+              ↓
+┌─────────────────────────────────────────────┐
+│  ПРЕПОДАВАТЕЛЬ                              │
+│  ├─ Проводит встречу                        │
+│  ├─ Даёт код разблокировки (DAY1, DAY2...)  │
+│  └─ Отвечает на вопросы в чате              │
+└─────────────────────────────────────────────┘
+```
+
+### Поток данных
+```
+1. Ученик открывает бота
+   ↓
+2. Бот показывает кнопку "Открыть курс"
+   ↓
+3. TMA загружается из Vercel
+   ↓
+4. TMA проверяет разблокированные дни (LocalStorage)
+   ↓
+5. Показывает доступные дни
+   ↓
+6. Ученик вводит код в боте
+   ↓
+7. Бот отправляет callback в TMA (через URL параметр)
+   ↓
+8. TMA сохраняет разблокировку в LocalStorage
+   ↓
+9. День открывается
+```
+
+### Компоненты системы
+
+**1. Telegram Bot (Node.js + Grammy)**
+- Приветствие и навигация
+- Приём и валидация кодов разблокировки
+- Передача unlock статуса в TMA
+
+**2. TMA Frontend (HTML/CSS/JS + Tailwind)**
+- Отображение материалов
+- Навигация по дням
+- Контроль доступа (проверка LocalStorage)
+- Рендеринг Markdown → HTML
+
+**3. Content (Markdown файлы)**
+- 7 дней курса (day-0.md ... day-7.md)
+- Библиотека промптов (prompts.json)
+- Шпаргалки (cheatsheets.json)
+
+**4. LocalStorage (клиентское хранилище)**
+- Разблокированные дни
+- Прогресс по чек-листам
+- Настройки (опционально)
+
+---
+
+## ТЕХНИЧЕСКИЙ СТЕК
+
+### Frontend (TMA)
+
+| Технология | Назначение | Версия |
+|------------|------------|--------|
+| HTML5 | Разметка | - |
+| CSS3 | Стили | - |
+| JavaScript (Vanilla) | Логика | ES6+ |
+| Tailwind CSS | CSS фреймворк | 3.x |
+| marked.js | Markdown → HTML | 11.x |
+| Telegram WebApp SDK | Интеграция с Telegram | Latest |
+
+### Backend (Bot)
+
+| Технология | Назначение | Версия |
+|------------|------------|--------|
+| Node.js | Runtime | 18.x+ |
+| Grammy | Telegram Bot Framework | 1.x |
+| dotenv | Переменные окружения | Latest |
+
+### Deployment
+
+| Сервис | Назначение | План |
+|--------|------------|------|
+| Vercel | Хостинг TMA | Free |
+| Railway | Хостинг бота | Free (500h/мес) |
+| GitHub | Version control | Free |
+
+### Инструменты разработки
+
+- VS Code (редактор)
+- Git (версионирование)
+- npm (пакетный менеджер)
+
+---
+
+## СТРУКТУРА ФАЙЛОВ
+
+### Общая структура проекта
+```
+vibe-coding-course/
+├── tma/                          # Frontend приложение
+│   ├── public/
+│   │   ├── index.html           # Главная страница
+│   │   ├── day.html             # Страница дня (динамическая)
+│   │   ├── prompts.html         # Библиотека промптов
+│   │   ├── cheatsheets.html     # Шпаргалки
+│   │   ├── css/
+│   │   │   └── style.css        # Основные стили
+│   │   ├── js/
+│   │   │   ├── app.js           # Основная логика
+│   │   │   ├── access.js        # Контроль доступа
+│   │   │   ├── progress.js      # Управление прогрессом
+│   │   │   ├── marked.min.js    # Библиотека Markdown
+│   │   │   └── telegram.js      # Интеграция с Telegram SDK
+│   │   ├── content/
+│   │   │   ├── day-0.md         # Материалы дней
+│   │   │   ├── day-1.md
+│   │   │   ├── ...
+│   │   │   ├── day-7.md
+│   │   │   ├── prompts.json     # База промптов
+│   │   │   └── cheatsheets.json # База шпаргалок
+│   │   └── images/              # Изображения (если нужны)
+│   ├── vercel.json              # Конфигурация Vercel
+│   └── package.json             # Зависимости (если используются)
+│
+├── bot/                          # Telegram бот
+│   ├── src/
+│   │   ├── index.js             # Точка входа бота
+│   │   ├── handlers/
+│   │   │   ├── start.js         # Обработчик /start
+│   │   │   └── unlock.js        # Обработчик разблокировки
+│   │   ├── config/
+│   │   │   └── codes.js         # Коды разблокировки
+│   │   └── utils/
+│   │       └── validate.js      # Валидация кодов
+│   ├── .env                     # Переменные окружения (BOT_TOKEN)
+│   ├── .env.example             # Пример .env
+│   ├── package.json             # Зависимости
+│   └── railway.json             # Конфигурация Railway
+│
+├── docs/                         # Документация
+│   └── TMA-DOCUMENTATION.md     # Этот файл
+│
+├── .gitignore                    # Игнорируемые файлы
+└── README.md                     # Описание проекта
+```
+
+---
+
+## FRONTEND (TMA)
+
+### 1. Главная страница (index.html)
+
+**Назначение:** Навигация по разделам курса
+
+**Структура:**
+```html
+
+
+
+    
+    
+    Курс: Vibe Coding
+    
+    
+    
+
+
+    
+        
+            🍕 Как создавать цифровые проекты с помощью ИИ
+            
+                Прогресс: 0/7
+                
+            
+        
+
+        
+            📚 Всегда доступно
+            
+                
+                    Библиотека промптов
+                    14+ готовых промптов для работы
+                
+                
+                    Шпаргалки
+                    Команды, горячие клавиши, ссылки
+                
+            
+        
+
+        
+            📅 Материалы по дням
+            
+        
+
+        
+            
+                💬 Написать преподавателю
+            
+        
+    
+
+    
+    
+    
+
+
+```
+
+**Ключевые элементы:**
+
+- Прогресс-бар (динамический)
+- Раздел "Всегда доступно" (библиотека, шпаргалки)
+- Динамический список дней (генерируется JS)
+- Кнопка связи с преподавателем
+
+---
+
+### 2. Страница дня (day.html)
+
+**Назначение:** Отображение материалов конкретного дня
+
+**Параметры URL:** `day.html?id=day1`
+
+**Структура:**
+```html
+
+
+
+    
+    
+    День курса
+    
+    
+    
+
+
+    
+        
+            ← Назад
+            
+        
+
+        
+            
+        
+
+        
+            ← Предыдущий день
+            Следующий день →
+        
+    
+
+    
+    
+    
+    
+
+
+```
+
+**Логика загрузки контента:**
+```javascript
+// js/day.js (фрагмент)
+
+async function loadDayContent() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const dayId = urlParams.get('id'); // например: "day1"
+    
+    // Проверка доступа
+    if (isDayLocked(dayId)) {
+        showLockedMessage();
+        return;
+    }
+    
+    // Загрузка Markdown
+    const response = await fetch(`content/${dayId}.md`);
+    const markdown = await response.text();
+    
+    // Рендеринг
+    const html = marked.parse(markdown);
+    document.getElementById('day-content').innerHTML = html;
+    
+    // Обработка чек-листов
+    processChecklists(dayId);
+}
+```
+
+---
+
+### 3. Библиотека промптов (prompts.html)
+
+**Назначение:** Каталог всех промптов с возможностью копирования
+
+**Структура данных (prompts.json):**
+```json
+[
+  {
+    "id": 1,
+    "title": "Первая веб-страница Hello World",
+    "day": "day0",
+    "category": "Создание",
+    "prompt": "Создай простую веб-страницу \"Hello World\" с красивым дизайном.\n\nТребования:\n- HTML файл с именем index.html\n- Заголовок: \"Привет, мир!\"\n- Текст: \"Это моя первая веб-страница, созданная с помощью ИИ\"\n- Кнопка \"Нажми меня\" (при клике показывает alert \"Привет!\")\n- Современный дизайн (центрированный текст, градиентный фон, красивый шрифт)\n- Всё в одном файле (HTML + CSS + JavaScript внутри)"
+  },
+  {
+    "id": 2,
+    "title": "Изменение дизайна страницы",
+    "day": "day0",
+    "category": "Итерация",
+    "prompt": "Измени эту страницу:\n1. Поменяй градиент фона на оранжево-розовый\n2. Добавь эмодзи 👋 к заголовку\n3. Сделай кнопку зелёной с белым текстом\n4. При наведении на кнопку пусть она слегка поворачивается\n\nВот код, который нужно изменить:\n[вставьте сюда ваш текущий код]"
+  }
+  // ... остальные 12+ промптов
+]
+```
+
+**UI элемент промпта:**
+```html
+
+    
+        ПРОМПТ #1
+        День 0
+    
+    Первая веб-страница Hello World
+    
+        
+    
+    
+        ▼ Развернуть
+        📋 Копировать
+    
+
+```
+
+**Функция копирования:**
+```javascript
+function copyPrompt(promptId) {
+    const promptData = prompts.find(p => p.id === promptId);
+    navigator.clipboard.writeText(promptData.prompt);
+    
+    // Haptic feedback
+    window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+    
+    // Уведомление
+    showToast('✅ Промпт скопирован!');
+}
+```
+
+---
+
+### 4. Шпаргалки (cheatsheets.html)
+
+**Назначение:** Справочник команд, ссылок, горячих клавиш
+
+**Структура данных (cheatsheets.json):**
+```json
+{
+  "terminal": {
+    "title": "Команды терминала",
+    "items": [
+      {
+        "command": "cd",
+        "description": "Узнать текущую папку (Windows)",
+        "example": "cd"
+      },
+      {
+        "command": "pwd",
+        "description": "Узнать текущую папку (macOS/Linux)",
+        "example": "pwd"
+      },
+      {
+        "command": "mkdir имя_папки",
+        "description": "Создать новую папку",
+        "example": "mkdir my-project"
+      }
+      // ... остальные команды
+    ]
+  },
+  "git": {
+    "title": "Основные команды Git",
+    "items": [
+      {
+        "command": "git init",
+        "description": "Инициализировать Git-репозиторий",
+        "example": "git init"
+      }
+      // ... остальные
+    ]
+  },
+  "links": {
+    "title": "Полезные ссылки",
+    "items": [
+      {
+        "name": "ChatGPT",
+        "url": "https://chat.openai.com",
+        "description": "AI-ассистент OpenAI"
+      },
+      {
+        "name": "Claude",
+        "url": "https://claude.ai",
+        "description": "AI-ассистент Anthropic"
+      }
+      // ... остальные
+    ]
+  }
+}
+```
+
+---
+
+### 5. JavaScript модули
+
+#### **js/telegram.js** — Интеграция с Telegram
+```javascript
+// Инициализация Telegram WebApp
+const tg = window.Telegram.WebApp;
+tg.ready();
+
+// Расширить viewport
+tg.expand();
+
+// Адаптация цветов под тему Telegram
+function applyTelegramTheme() {
+    const isDark = tg.colorScheme === 'dark';
+    document.body.classList.toggle('dark-theme', isDark);
+    
+    // Применение цветов Telegram
+    document.documentElement.style.setProperty('--tg-bg', tg.themeParams.bg_color || '#ffffff');
+    document.documentElement.style.setProperty('--tg-text', tg.themeParams.text_color || '#000000');
+    document.documentElement.style.setProperty('--tg-button', tg.themeParams.button_color || '#3390ec');
+}
+
+// Кнопка "Назад"
+function setupBackButton() {
+    tg.BackButton.show();
+    tg.BackButton.onClick(() => {
+        window.location.href = 'index.html';
+    });
+}
+
+// Связь с преподавателем
+function contactTeacher() {
+    const teacherUsername = 'your_username'; // Заменить на реальный
+    const message = 'Здравствуйте! У меня вопрос по курсу:';
+    
+    tg.openTelegramLink(
+        `https://t.me/${teacherUsername}?text=${encodeURIComponent(message)}`
+    );
+}
+
+// Haptic feedback
+function vibrate(type = 'light') {
+    tg.HapticFeedback.impactOccurred(type);
+}
+
+// Инициализация при загрузке
+applyTelegramTheme();
+```
+
+---
+
+#### **js/access.js** — Контроль доступа
+```javascript
+// Конфигурация дней
+const DAYS_CONFIG = {
+    day0: { title: 'Подготовка', duration: '90 мин', order: 0 },
+    day1: { title: 'Vibe Coding', duration: '60 мин', order: 1 },
+    day2: { title: 'Архитектура TMA', duration: '60 мин', order: 2 },
+    day3: { title: 'Корзина и формы', duration: '90 мин', order: 3 },
+    day4: { title: 'Интеграция с Telegram', duration: '75 мин', order: 4 },
+    day5: { title: 'Платежи и API', duration: '60 мин', order: 5 },
+    day6: { title: 'Автоматизация', duration: '75 мин', order: 6 },
+    day7: { title: 'Аналитика и финал', duration: '60 мин', order: 7 }
+};
+
+// Коды разблокировки
+const UNLOCK_CODES = {
+    'DAY0': 'day0',
+    'DAY1': 'day1',
+    'DAY2': 'day2',
+    'DAY3': 'day3',
+    'DAY4': 'day4',
+    'DAY5': 'day5',
+    'DAY6': 'day6',
+    'DAY7': 'day7'
+};
+
+// Получить список разблокированных дней
+function getUnlockedDays() {
+    const unlocked = localStorage.getItem('unlocked_days');
+    return unlocked ? JSON.parse(unlocked) : [];
+}
+
+// Сохранить разблокированные дни
+function saveUnlockedDays(days) {
+    localStorage.setItem('unlocked_days', JSON.stringify(days));
+}
+
+// Проверка: заблокирован ли день
+function isDayLocked(dayId) {
+    const unlocked = getUnlockedDays();
+    return !unlocked.includes(dayId);
+}
+
+// Разблокировка дня кодом
+function unlockDay(code) {
+    const dayId = UNLOCK_CODES[code.toUpperCase()];
+    
+    if (!dayId) {
+        return { success: false, message: 'Неверный код' };
+    }
+    
+    const unlocked = getUnlockedDays();
+    
+    if (unlocked.includes(dayId)) {
+        return { success: true, message: 'День уже разблокирован', alreadyUnlocked: true };
+    }
+    
+    unlocked.push(dayId);
+    saveUnlockedDays(unlocked);
+    
+    return {
+        success: true,
+        message: `День "${DAYS_CONFIG[dayId].title}" разблокирован!`,
+        dayTitle: DAYS_CONFIG[dayId].title
+    };
+}
+
+// Разблокировка из URL (когда бот передаёт параметр)
+function checkUnlockFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const unlockCode = urlParams.get('unlock');
+    
+    if (unlockCode) {
+        const result = unlockDay(unlockCode);
+        if (result.success && !result.alreadyUnlocked) {
+            showToast(`✅ ${result.message}`);
+        }
+    }
+}
+
+// Вызвать при загрузке страницы
+window.addEventListener('DOMContentLoaded', checkUnlockFromURL);
+```
+
+---
+
+#### **js/progress.js** — Управление прогрессом
+```javascript
+// Получить прогресс по всем дням
+function getProgress() {
+    const progress = localStorage.getItem('course_progress');
+    return progress ? JSON.parse(progress) : initializeProgress();
+}
+
+// Инициализация структуры прогресса
+function initializeProgress() {
+    const progress = {};
+    Object.keys(DAYS_CONFIG).forEach(dayId => {
+        progress[dayId] = {
+            completed: false,
+            checklists: [] // Массив булевых значений
+        };
+    });
+    saveProgress(progress);
+    return progress;
+}
+
+// Сохранить прогресс
+function saveProgress(progress) {
+    localStorage.setItem('course_progress', JSON.stringify(progress));
+}
+
+// Отметить день как пройденный
+function markDayCompleted(dayId) {
+    const progress = getProgress();
+    progress[dayId].completed = true;
+    saveProgress(progress);
+    updateProgressBar();
+}
+
+// Обновить чек-лист
+function updateChecklist(dayId, checklistIndex, checked) {
+    const progress = getProgress();
+    progress[dayId].checklists[checklistIndex] = checked;
+    saveProgress(progress);
+}
+
+// Получить общий прогресс
+function getTotalProgress() {
+    const progress = getProgress();
+    const completed = Object.values(progress).filter(d => d.completed).length;
+    const total = Object.keys(DAYS_CONFIG).length;
+    return { completed, total, percentage: Math.round((completed / total) * 100) };
+}
+
+// Обновить прогресс-бар на главной
+function updateProgressBar() {
+    const { completed, total, percentage } = getTotalProgress();
+    document.getElementById('progress-text').textContent = `Прогресс: ${completed}/${total}`;
+    document.getElementById('progress-fill').style.width = `${percentage}%`;
+}
+
+// Обработка чек-листов в Markdown контенте
+function processChecklists(dayId) {
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    const progress = getProgress();
+    
+    checkboxes.forEach((checkbox, index) => {
+        // Восстановить состояние из прогресса
+        if (progress[dayId].checklists[index]) {
+            checkbox.checked = true;
+        }
+        
+        // Обработчик изменения
+        checkbox.addEventListener('change', (e) => {
+            updateChecklist(dayId, index, e.target.checked);
+            vibrate('light');
+        });
+    });
+}
+```
+
+---
+
+#### **js/app.js** — Основная логика главной страницы
+```javascript
+// Рендеринг списка дней
+function renderDays() {
+    const container = document.getElementById('days-container');
+    const unlocked = getUnlockedDays();
+    
+    Object.entries(DAYS_CONFIG).forEach(([dayId, dayInfo]) => {
+        const isLocked = !unlocked.includes(dayId);
+        const progress = getProgress();
+        const isCompleted = progress[dayId]?.completed || false;
+        
+        const card = document.createElement('div');
+        card.className = `day-card ${isLocked ? 'locked' : 'unlocked'} ${isCompleted ? 'completed' : ''}`;
+        
+        if (isLocked) {
+            card.innerHTML = `
+                🔒
+                
+                    ${dayInfo.title}
+                    Введите код от преподавателя
+                    
+                        Ввести код
+                    
+                
+            `;
+        } else {
+            card.innerHTML = `
+                ${isCompleted ? '✅' : '📖'}
+                
+                    День ${dayInfo.order}: ${dayInfo.title}
+                    ${dayInfo.duration}
+                
+                Открыть
+            `;
+        }
+        
+        container.appendChild(card);
+    });
+    
+    updateProgressBar();
+}
+
+// Промпт для ввода кода
+function promptUnlockCode(dayId) {
+    const code = prompt('Введите код разблокировки:');
+    if (code) {
+        const result = unlockDay(code);
+        if (result.success) {
+            showToast(`✅ ${result.message}`);
+            renderDays(); // Перерисовать список
+        } else {
+            showToast(`❌ ${result.message}`);
+        }
+    }
+}
+
+// Показать всплывающее уведомление
+function showToast(message) {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 100);
+    
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// Инициализация при загрузке
+document.addEventListener('DOMContentLoaded', () => {
+    renderDays();
+});
+```
+
+---
+
+### 6. Стили (css/style.css)
+
+**Основные CSS переменные:**
+```css
+:root {
+    /* Цвета Telegram (светлая тема) */
+    --tg-bg: #ffffff;
+    --tg-text: #000000;
+    --tg-button: #3390ec;
+    --tg-button-text: #ffffff;
+    --tg-hint: #999999;
+    --tg-link: #3390ec;
+    
+    /* Дополнительные цвета */
+    --primary: #3390ec;
+    --success: #4CAF50;
+    --warning: #FF9800;
+    --danger: #F44336;
+    
+    /* Отступы */
+    --spacing-xs: 0.5rem;
+    --spacing-sm: 1rem;
+    --spacing-md: 1.5rem;
+    --spacing-lg: 2rem;
+    
+    /* Тени */
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
+    --shadow-md: 0 4px 8px rgba(0,0,0,0.15);
+    --shadow-lg: 0 8px 16px rgba(0,0,0,0.2);
+}
+
+.dark-theme {
+    --tg-bg: #18222d;
+    --tg-text: #ffffff;
+    --tg-button: #5288c1;
+    --tg-hint: #708499;
+    --tg-link: #5288c1;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--tg-bg);
+    color: var(--tg-text);
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--spacing-md);
+}
+
+/* Прогресс-бар */
+.progress-bar {
+    background: rgba(0,0,0,0.1);
+    border-radius: 8px;
+    height: 8px;
+    margin: var(--spacing-sm) 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-fill {
+    background: var(--success);
+    height: 100%;
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+/* Карточки дней */
+.day-card {
+    background: var(--tg-bg);
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 12px;
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.day-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.day-card.locked {
+    opacity: 0.6;
+}
+
+.day-card.completed {
+    border-color: var(--success);
+}
+
+/* Кнопки */
+.btn-open, .btn-unlock, .btn-contact {
+    background: var(--tg-button);
+    color: var(--tg-button-text);
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.btn-open:hover, .btn-unlock:hover, .btn-contact:hover {
+    opacity: 0.9;
+}
+
+/* Toast уведомления */
+.toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: rgba(0,0,0,0.9);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+/* Markdown контент */
+.markdown-content h1 { font-size: 2rem; margin-top: 2rem; }
+.markdown-content h2 { font-size: 1.5rem; margin-top: 1.5rem; }
+.markdown-content h3 { font-size: 1.25rem; margin-top: 1rem; }
+.markdown-content code { 
+    background: rgba(0,0,0,0.1); 
+    padding: 0.2rem 0.4rem; 
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+}
+.markdown-content pre {
+    background: rgba(0,0,0,0.1);
+    padding: 1rem;
+    border-radius: 8px;
+    overflow-x: auto;
+}
+.markdown-content input[type="checkbox"] {
+    margin-right: 0.5rem;
+    cursor: pointer;
+}
+```
+
+---
+
+## BACKEND (TELEGRAM BOT)
+
+### 1. Структура бота
+
+**Основной файл (bot/src/index.js):**
+```javascript
+import { Bot, InlineKeyboard } from 'grammy';
+import dotenv from 'dotenv';
+import { UNLOCK_CODES } from './config/codes.js';
+
+dotenv.config();
+
+const bot = new Bot(process.env.BOT_TOKEN);
+const TMA_URL = process.env.TMA_URL || 'https://your-course.vercel.app';
+
+// Команда /start
+bot.command('start', async (ctx) => {
+    const keyboard = new InlineKeyboard()
+        .webApp('📚 Открыть курс', TMA_URL);
+    
+    await ctx.reply(
+        '👋 Добро пожаловать на курс "Как создавать цифровые проекты с помощью ИИ"!\n\n' +
+        '📱 Нажмите кнопку ниже, чтобы начать обучение.\n\n' +
+        '💡 Ваш прогресс сохраняется автоматически.\n\n' +
+        '🔓 Чтобы разблокировать новый день, используйте команду /unlock и введите код, который дал преподаватель.',
+        { reply_markup: keyboard }
+    );
+});
+
+// Команда /help
+bot.command('help', async (ctx) => {
+    await ctx.reply(
+        '📖 Как пользоваться курсом:\n\n' +
+        '1. Нажмите "Открыть курс"\n' +
+        '2. Выберите день для изучения\n' +
+        '3. Читайте материалы и отмечайте чек-листы\n' +
+        '4. После встречи с преподавателем получите код\n' +
+        '5. Используйте /unlock чтобы разблокировать день\n\n' +
+        '❓ Вопросы? Напишите @your_username'
+    );
+});
+
+// Команда /unlock
+bot.command('unlock', async (ctx) => {
+    await ctx.reply(
+        '🔓 Введите код разблокировки, который дал преподаватель:\n\n' +
+        'Например: DAY1\n\n' +
+        '💡 Код можно получить после прохождения встречи.'
+    );
+    
+    // Устанавливаем флаг ожидания кода
+    ctx.session = { awaitingCode: true };
+});
+
+// Обработка текстовых сообщений (коды)
+bot.on('message:text', async (ctx) => {
+    const code = ctx.message.text.toUpperCase().trim();
+    
+    // Проверка кода
+    if (UNLOCK_CODES[code]) {
+        const dayId = UNLOCK_CODES[code];
+        
+        // Формируем URL с параметром unlock
+        const unlockURL = `${TMA_URL}?unlock=${code}`;
+        
+        const keyboard = new InlineKeyboard()
+            .webApp('📚 Открыть курс', unlockURL);
+        
+        await ctx.reply(
+            `✅ Код принят!\n\n` +
+            `День разблокирован. Откройте курс чтобы увидеть новые материалы.`,
+            { reply_markup: keyboard }
+        );
+    } else {
+        await ctx.reply(
+            '❌ Неверный код.\n\n' +
+            'Проверьте код у преподавателя или используйте /unlock чтобы попробовать снова.'
+        );
+    }
+});
+
+// Запуск бота
+bot.start();
+console.log('✅ Бот запущен');
+```
+
+---
+
+### 2. Конфигурация кодов (bot/src/config/codes.js)
+```javascript
+// Коды разблокировки
+export const UNLOCK_CODES = {
+    'DAY0': 'day0',
+    'DAY1': 'day1',
+    'DAY2': 'day2',
+    'DAY3': 'day3',
+    'DAY4': 'day4',
+    'DAY5': 'day5',
+    'DAY6': 'day6',
+    'DAY7': 'day7'
+};
+
+// Информация о днях (для сообщений бота)
+export const DAYS_INFO = {
+    day0: { title: 'Подготовка', duration: '90 мин' },
+    day1: { title: 'Vibe Coding', duration: '60 мин' },
+    day2: { title: 'Архитектура TMA', duration: '60 мин' },
+    day3: { title: 'Корзина и формы', duration: '90 мин' },
+    day4: { title: 'Интеграция с Telegram', duration: '75 мин' },
+    day5: { title: 'Платежи и API', duration: '60 мин' },
+    day6: { title: 'Автоматизация', duration: '75 мин' },
+    day7: { title: 'Аналитика и финал', duration: '60 мин' }
+};
+```
+
+---
+
+### 3. Переменные окружения (bot/.env.example)
+```env
+# Токен бота от @BotFather
+BOT_TOKEN=your_bot_token_here
+
+# URL TMA на Vercel
+TMA_URL=https://your-course.vercel.app
+
+# Порт для webhook (если используется)
+PORT=3000
+```
+
+---
+
+### 4. package.json бота
+```json
+{
+  "name": "vibe-coding-bot",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Telegram bot for Vibe Coding course",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "dependencies": {
+    "grammy": "^1.19.2",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
+```
+
+---
+
+## КОНТРОЛЬ ДОСТУПА
+
+### Схема работы
+```
+1. Преподаватель проводит встречу
+   ↓
+2. В конце встречи даёт код: "DAY2"
+   ↓
+3. Ученик открывает бота
+   ↓
+4. Вводит /unlock
+   ↓
+5. Вводит код "DAY2"
+   ↓
+6. Бот проверяет код в UNLOCK_CODES
+   ↓
+7. Если код верный → отправляет кнопку с URL: TMA_URL?unlock=DAY2
+   ↓
+8. Ученик кликает кнопку
+   ↓
+9. TMA открывается, JavaScript считывает параметр ?unlock=DAY2
+   ↓
+10. Функция unlockDay('DAY2') разблокирует день
+    ↓
+11. День сохраняется в LocalStorage
+    ↓
+12. Ученик видит открытый день
+```
+
+### Безопасность
+
+**Уровень защиты:** Базовый (достаточный для бесплатного образовательного курса)
+
+**Потенциальные уязвимости:**
+- Ученики могут передавать коды друг другу
+- LocalStorage можно очистить
+- Коды простые и предсказуемые
+
+**Меры защиты (опционально для v2):**
+- Уникальные коды для каждого ученика
+- Серверная проверка доступа (Supabase)
+- Ограничение по времени действия кодов
+- Привязка к Telegram ID
+
+**Для текущей задачи:** Базовой защиты достаточно.
+
+---
+
+## DEPLOYMENT
+
+### 1. Деплой TMA на Vercel
+
+**Шаг 1: Подготовка проекта**
+```bash
+# Структура для Vercel
+tma/
+├── public/           # Все файлы приложения
+│   ├── index.html
+│   ├── ...
+└── vercel.json      # Конфигурация
+```
+
+**Файл vercel.json:**
+```json
+{
+  "version": 2,
+  "public": true,
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, must-revalidate"
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Шаг 2: Деплой**
+```bash
+# Установить Vercel CLI
+npm install -g vercel
+
+# Перейти в папку TMA
+cd tma
+
+# Деплой
+vercel --prod
+
+# Следовать инструкциям:
+# - Set up and deploy? Yes
+# - Which scope? (выбрать аккаунт)
+# - Link to existing project? No
+# - Project name? vibe-coding-course
+# - Directory? ./
+```
+
+**Результат:** Получаете URL вида `https://vibe-coding-course.vercel.app`
+
+---
+
+### 2. Деплой бота на Railway
+
+**Шаг 1: Подготовка**
+```bash
+# Убедиться что .env в .gitignore
+echo ".env" >> .gitignore
+
+# Закоммитить код
+git add .
+git commit -m "Prepare bot for deployment"
+git push
+```
+
+**Шаг 2: Создание проекта на Railway**
+
+1. Зайти на **railway.app**
+2. Нажать **New Project**
+3. Выбрать **Deploy from GitHub repo**
+4. Выбрать репозиторий с ботом
+5. Railway автоматически определит Node.js проект
+
+**Шаг 3: Настройка переменных окружения**
+
+1. В проекте Railway → **Variables**
+2. Добавить:
+```
+   BOT_TOKEN=ваш_токен_от_BotFather
+   TMA_URL=https://vibe-coding-course.vercel.app
+```
+
+**Шаг 4: Деплой**
+
+Railway автоматически деплоит при push в GitHub.
+
+**Результат:** Бот работает 24/7
+
+---
+
+### 3. Подключение бота к TMA
+
+**В коде бота обновить TMA_URL:**
+```javascript
+const TMA_URL = 'https://vibe-coding-course.vercel.app';
+```
+
+**Протестировать:**
+
+1. Открыть бота в Telegram
+2. /start
+3. Нажать "Открыть курс"
+4. TMA должен загрузиться
+
+---
+
+## ОБСЛУЖИВАНИЕ И ОБНОВЛЕНИЕ
+
+### Обновление материалов курса
+
+**Сценарий:** Нужно исправить опечатку в Дне 2
+
+**Шаги:**
+
+1. **Локально отредактировать файл:**
+```bash
+   # Открыть файл
+   code tma/public/content/day-2.md
+   
+   # Внести изменения
+   # Сохранить
+```
+
+2. **Закоммитить и запушить:**
+```bash
+   git add tma/public/content/day-2.md
+   git commit -m "Fix: опечатка в Дне 2"
+   git push
+```
+
+3. **Vercel автоматически деплоит**
+   - Занимает ~1 минуту
+   - Ученики сразу видят обновление
+
+---
+
+### Добавление нового промпта
+
+**Шаги:**
+
+1. Открыть `tma/public/content/prompts.json`
+
+2. Добавить новый объект:
+```json
+   {
+     "id": 15,
+     "title": "Название промпта",
+     "day": "day3",
+     "category": "Создание",
+     "prompt": "Текст промпта..."
+   }
+```
+
+3. Закоммитить и запушить
+
+4. Готово!
+
+---
+
+### Изменение кодов разблокировки
+
+**Сценарий:** Хотите изменить коды для нового потока
+
+**Шаги:**
+
+1. **В боте:** `bot/src/config/codes.js`
+```javascript
+   export const UNLOCK_CODES = {
+       'MARCH_DAY0': 'day0',
+       'MARCH_DAY1': 'day1',
+       // ...
+   };
+```
+
+2. **В TMA:** `tma/public/js/access.js`
+```javascript
+   const UNLOCK_CODES = {
+       'MARCH_DAY0': 'day0',
+       'MARCH_DAY1': 'day1',
+       // ...
+   };
+```
+
+3. Закоммитить оба изменения
+
+4. Railway и Vercel автоматически деплоят
+
+---
+
+### Мониторинг
+
+**Проверка работы TMA:**
+- Открыть URL в браузере
+- Проверить консоль (F12) на ошибки
+
+**Проверка работы бота:**
+- Отправить /start в бота
+- Проверить логи в Railway (Deployments → Logs)
+
+**При ошибках:**
+- Проверить переменные окружения
+- Проверить логи Railway
+- Проверить консоль браузера в TMA
+
+---
+
+## ROADMAP И БУДУЩИЕ УЛУЧШЕНИЯ
+
+### Version 1.0 (MVP) — ✅ Описано в этой документации
+
+- Навигация по дням
+- Контроль доступа кодами
+- Библиотека промптов
+- Шпаргалки
+- Чек-листы с LocalStorage
+- Кнопка связи с преподавателем
+- Адаптация под тему Telegram
+
+---
+
+### Version 1.1 (Quick wins)
+
+**Срок:** +1-2 дня разработки
+
+- [ ] **Поиск по материалам** (Ctrl+F внутри дня)
+- [ ] **Закладки** (сохранять важные места в уроках)
+- [ ] **Таймер Pomodoro** (встроенный таймер для уроков)
+- [ ] **Прогресс чтения** (индикатор сколько прочитано от урока)
+
+---
+
+### Version 2.0 (Supabase integration)
+
+**Срок:** +3-5 дней разработки
+
+- [ ] **База данных Supabase**
+  - Хранение прогресса в облаке
+  - Синхронизация между устройствами
+  
+- [ ] **Админ-панель для преподавателя**
+  - Список учеников с прогрессом
+  - Ручная разблокировка дней
+  - Статистика (кто где застрял)
+  
+- [ ] **Уникальные коды для каждого ученика**
+  - Защита от передачи кодов
+  
+- [ ] **История активности**
+  - Когда ученик заходил
+  - Сколько времени провёл на уроке
+
+---
+
+### Version 2.5 (Gamification)
+
+**Срок:** +2-3 дня разработки
+
+- [ ] **Сертификат по завершении**
+  - Генерация PDF с именем ученика
+  - Уникальный ID сертификата
+  
+- [ ] **Достижения (Badges)**
+  - "Прошёл все дни"
+  - "Выполнил все чек-листы"
+  - "Использовал все промпты"
+  
+- [ ] **Streak (дни подряд)**
+  - Мотивация проходить курс регулярно
+
+---
+
+### Version 3.0 (Community features)
+
+**Срок:** +5-7 дней разработки
+
+- [ ] **Комментарии к урокам**
+  - Ученики могут задавать вопросы прямо в тексте
+  - Преподаватель отвечает
+  
+- [ ] **Чат учеников**
+  - Общий чат потока
+  - Обмен опытом
+  
+- [ ] **Загрузка домашних заданий**
+  - Скриншоты проектов
+  - Преподаватель проверяет и комментирует
+
+---
+
+### Version 3.5 (Content enhancements)
+
+**Срок:** +3-4 дня разработки
+
+- [ ] **Видео в уроках**
+  - Встроенные видео-инструкции
+  - YouTube embed
+  
+- [ ] **Интерактивные упражнения**
+  - Встроенный редактор кода (Monaco Editor)
+  - "Попробуй сам" прямо в TMA
+  
+- [ ] **Экспорт в PDF**
+  - Скачать день целиком
+  - Для оффлайн-чтения
+
+---
+
+## ЗАКЛЮЧЕНИЕ
+
+Эта документация описывает полную архитектуру Telegram Mini App для курса "Как создавать цифровые проекты с помощью ИИ".
+
+### Ключевые решения
+
+✅ **Простота:** Vanilla JS, без сложных фреймворков  
+✅ **Скорость:** Быстрый запуск и разработка  
+✅ **Надёжность:** LocalStorage для MVP, путь к Supabase для масштаба  
+✅ **UX:** Telegram-native дизайн, интеграция с SDK  
+✅ **Гибкость:** Контроль доступа под формат 1-на-1 встреч  
+
+### Следующие шаги
+
+1. **Создать репозиторий GitHub**
+2. **Настроить структуру файлов**
+3. **Разработать прототип (1 день + библиотека)**
+4. **Протестировать с реальным учеником**
+5. **Итерировать и улучшать**
+
+### Контакты
+
+**Вопросы по документации:**  
+[Укажите контакты для связи]
+
+**Версия документации:** 1.0  
+**Дата последнего обновления:** Март 2026
+
+---
+
+**Готово к разработке!** 🚀

@@ -1,0 +1,685 @@
+# ДОПОЛНЕНИЕ К ДОКУМЕНТАЦИИ: БЕСПЛАТНЫЙ ДОСТУП
+
+**Версия:** 1.1  
+**Дата:** Март 2026  
+**Изменения:** Добавление бесплатного доступа к части контента
+
+---
+
+## 📋 ОБЗОР ИЗМЕНЕНИЙ
+
+### Что изменилось
+
+В TMA добавлена **модель freemium** — часть контента доступна всем пользователям бесплатно без кодов разблокировки.
+
+### Цель
+
+- Lead generation (привлечение потенциальных учеников)
+- Демонстрация качества материалов
+- Предоставление реальной ценности до покупки курса
+
+---
+
+## 🎯 СТРУКТУРА ДОСТУПА
+
+### Бесплатный доступ (для всех)
+
+**Открыто без кодов:**
+
+1. ✅ **Главная страница** — обзор курса, навигация
+2. ✅ **День 0: Подготовка** — полностью (90 минут контента)
+3. ✅ **Библиотека промптов** — все 14+ промптов
+4. ✅ **Шпаргалки и чек-листы** — все материалы
+
+### Платный доступ (для учеников курса)
+
+**Требуют коды разблокировки:**
+
+- 🔒 День 1: Принципы Vibe Coding
+- 🔒 День 2: Архитектура Telegram Mini Apps
+- 🔒 День 3: Корзина и формы
+- 🔒 День 4: Интеграция с Telegram
+- 🔒 День 5: Платежи и API
+- 🔒 День 6: Автоматизация
+- 🔒 День 7: Аналитика и финал
+
+---
+
+## 💻 ТЕХНИЧЕСКИЕ ИЗМЕНЕНИЯ
+
+### 1. Обновление access.js
+
+**Добавить в начало файла:**
+```javascript
+// Дни, открытые для всех (публичный доступ)
+const PUBLIC_DAYS = ['day0'];
+
+// Разделы, открытые для всех
+const PUBLIC_SECTIONS = ['prompts', 'cheatsheets'];
+```
+
+**Обновить функцию isDayLocked:**
+```javascript
+// Проверка: заблокирован ли день
+function isDayLocked(dayId) {
+    // Публичные дни всегда открыты
+    if (PUBLIC_DAYS.includes(dayId)) {
+        return false;
+    }
+    
+    // Остальные дни проверяем по кодам разблокировки
+    const unlocked = getUnlockedDays();
+    return !unlocked.includes(dayId);
+}
+```
+
+**Добавить новую функцию:**
+```javascript
+// Проверка: публичный ли раздел
+function isPublicSection(sectionId) {
+    return PUBLIC_SECTIONS.includes(sectionId);
+}
+
+// Получить статус доступа к дню
+function getDayAccessStatus(dayId) {
+    if (PUBLIC_DAYS.includes(dayId)) {
+        return {
+            locked: false,
+            reason: 'public',
+            badge: 'Бесплатно'
+        };
+    }
+    
+    const unlocked = getUnlockedDays();
+    if (unlocked.includes(dayId)) {
+        return {
+            locked: false,
+            reason: 'unlocked',
+            badge: null
+        };
+    }
+    
+    return {
+        locked: true,
+        reason: 'locked',
+        badge: 'Для учеников курса'
+    };
+}
+```
+
+---
+
+### 2. Обновление app.js (рендеринг главной)
+
+**Обновить функцию renderDays:**
+```javascript
+function renderDays() {
+    const container = document.getElementById('days-container');
+    const progress = getProgress();
+    
+    Object.entries(DAYS_CONFIG).forEach(([dayId, dayInfo]) => {
+        const accessStatus = getDayAccessStatus(dayId);
+        const isCompleted = progress[dayId]?.completed || false;
+        
+        const card = document.createElement('div');
+        card.className = `day-card ${accessStatus.locked ? 'locked' : 'unlocked'} ${isCompleted ? 'completed' : ''}`;
+        
+        if (accessStatus.locked) {
+            // Заблокированный день
+            card.innerHTML = `
+                <div class="day-lock">🔒</div>
+                <div class="day-info">
+                    <h3>День ${dayInfo.order}: ${dayInfo.title}</h3>
+                    <p class="day-duration">${dayInfo.duration}</p>
+                    <span class="badge badge-locked">${accessStatus.badge}</span>
+                </div>
+                <button onclick="showEnrollmentInfo()" class="btn-enroll">
+                    Записаться на курс
+                </button>
+            `;
+        } else if (accessStatus.reason === 'public') {
+            // Бесплатный день
+            card.innerHTML = `
+                <div class="day-status">🎁</div>
+                <div class="day-info">
+                    <h3>День ${dayInfo.order}: ${dayInfo.title}</h3>
+                    <p class="day-duration">${dayInfo.duration}</p>
+                    <span class="badge badge-free">${accessStatus.badge}</span>
+                </div>
+                <a href="day.html?id=${dayId}" class="btn-open">Открыть бесплатно</a>
+            `;
+        } else {
+            // Разблокированный день (для учеников)
+            card.innerHTML = `
+                <div class="day-status">${isCompleted ? '✅' : '📖'}</div>
+                <div class="day-info">
+                    <h3>День ${dayInfo.order}: ${dayInfo.title}</h3>
+                    <p class="day-duration">${dayInfo.duration}</p>
+                </div>
+                <a href="day.html?id=${dayId}" class="btn-open">Открыть</a>
+            `;
+        }
+        
+        container.appendChild(card);
+    });
+    
+    updateProgressBar();
+}
+```
+
+**Добавить функцию для показа информации о записи:**
+```javascript
+// Показать информацию о записи на курс
+function showEnrollmentInfo() {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <h2>📚 Полный курс для учеников</h2>
+            <p>Дни 1-7 доступны после записи на курс.</p>
+            
+            <h3>Что входит в полный курс:</h3>
+            <ul>
+                <li>7 индивидуальных встреч (60-90 минут)</li>
+                <li>Доступ ко всем материалам навсегда</li>
+                <li>Создание полноценного Telegram Mini App</li>
+                <li>Поддержка преподавателя</li>
+            </ul>
+            
+            <div class="modal-actions">
+                <button onclick="contactTeacher()" class="btn-primary">
+                    Записаться на курс
+                </button>
+                <button onclick="closeModal()" class="btn-secondary">
+                    Закрыть
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    setTimeout(() => modal.classList.add('show'), 10);
+}
+
+function closeModal() {
+    const modal = document.querySelector('.modal');
+    modal.classList.remove('show');
+    setTimeout(() => modal.remove(), 300);
+}
+```
+
+---
+
+### 3. Обновление CSS (style.css)
+
+**Добавить стили для бейджей:**
+```css
+/* Бейджи статуса доступа */
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
+}
+
+.badge-free {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.badge-locked {
+    background: rgba(0,0,0,0.1);
+    color: var(--tg-hint);
+}
+
+/* Кнопка записи */
+.btn-enroll {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-enroll:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* Модальное окно */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.modal.show {
+    opacity: 1;
+}
+
+.modal-content {
+    background: var(--tg-bg);
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-content h2 {
+    margin-top: 0;
+    color: var(--tg-text);
+}
+
+.modal-content ul {
+    text-align: left;
+    padding-left: 1.5rem;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.modal-actions button {
+    flex: 1;
+}
+
+.btn-primary {
+    background: var(--tg-button);
+    color: var(--tg-button-text);
+}
+
+.btn-secondary {
+    background: rgba(0,0,0,0.1);
+    color: var(--tg-text);
+}
+```
+
+---
+
+### 4. Обновление бота
+
+**В bot/src/index.js обновить команду /start:**
+```javascript
+bot.command('start', async (ctx) => {
+    const keyboard = new InlineKeyboard()
+        .webApp('📚 Открыть курс', TMA_URL);
+    
+    await ctx.reply(
+        '👋 Добро пожаловать на курс "Как создавать цифровые проекты с помощью ИИ"!\n\n' +
+        '🎁 **Бесплатный доступ:**\n' +
+        '• День 0: Подготовка (90 минут)\n' +
+        '• Библиотека из 14+ промптов\n' +
+        '• Все шпаргалки\n\n' +
+        '📱 Нажмите кнопку ниже, чтобы начать!\n\n' +
+        '💡 Для доступа к полному курсу (Дни 1-7) используйте команду /enroll',
+        { 
+            reply_markup: keyboard,
+            parse_mode: 'Markdown'
+        }
+    );
+});
+```
+
+**Добавить команду /enroll:**
+```javascript
+bot.command('enroll', async (ctx) => {
+    await ctx.reply(
+        '📚 **Полный курс: Дни 1-7**\n\n' +
+        'В полный курс входит:\n' +
+        '✅ 7 индивидуальных встреч (60-90 минут)\n' +
+        '✅ Практические задания\n' +
+        '✅ Создание Telegram Mini App\n' +
+        '✅ Поддержка преподавателя\n' +
+        '✅ Доступ к материалам навсегда\n\n' +
+        '📞 Для записи напишите: @your_username',
+        { parse_mode: 'Markdown' }
+    );
+});
+```
+
+---
+
+## 📊 АНАЛИТИКА (ОПЦИОНАЛЬНО)
+
+### Отслеживание через Google Analytics
+
+**Добавить в head всех страниц TMA:**
+```html
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'GA_MEASUREMENT_ID');
+</script>
+```
+
+**Отслеживать события:**
+```javascript
+// Открытие бесплатного дня
+gtag('event', 'free_day_opened', {
+    'event_category': 'engagement',
+    'event_label': 'day_0'
+});
+
+// Клик "Записаться на курс"
+gtag('event', 'enrollment_clicked', {
+    'event_category': 'conversion',
+    'event_label': 'enrollment_cta'
+});
+
+// Завершение бесплатного дня
+gtag('event', 'free_day_completed', {
+    'event_category': 'engagement',
+    'event_label': 'day_0'
+});
+
+// Копирование промпта
+gtag('event', 'prompt_copied', {
+    'event_category': 'engagement',
+    'event_label': `prompt_${promptId}`
+});
+```
+
+---
+
+## 🎨 UX УЛУЧШЕНИЯ
+
+### Добавить CTA в конце Дня 0
+
+**В файл content/day-0.md добавить в конец:**
+```markdown
+---
+
+## 🎉 ПОЗДРАВЛЯЕМ С ЗАВЕРШЕНИЕМ ДНЯ 0!
+
+Вы прошли вводный урок и теперь у вас:
+
+✅ Установлены все инструменты разработки  
+✅ Создана первая веб-страница с помощью ИИ  
+✅ Создан Telegram бот  
+✅ Понимание основ работы с терминалом  
+
+### Что дальше?
+
+**Хотите создать полноценное Telegram Mini App для доставки пиццы?**
+
+На Днях 1-7 вы:
+- 🎯 Освоите философию Vibe Coding
+- 🏗️ Спроектируете архитектуру приложения
+- 🛒 Создадите корзину и формы заказа
+- 📱 Интегрируете с Telegram
+- 💳 Подключите платежи
+- 🤖 Настроите автоматизацию
+- 📊 Добавите аналитику
+
+### Записаться на полный курс
+
+Формат: 7 индивидуальных встреч (60-90 минут)  
+Результат: Готовое приложение в вашем портфолио  
+
+**Для записи нажмите кнопку "Записаться на курс" на главной странице  
+или напишите преподавателю: @your_username**
+
+---
+
+**Версия:** 1.0  
+**Дата:** Март 2026
+```
+
+---
+
+### Добавить прогресс-бар для бесплатной части
+
+**В index.html добавить отдельный блок:**
+```html
+<section class="free-content-progress">
+    <h2>🎁 Бесплатный контент</h2>
+    <div class="progress-item">
+        <span>День 0: Подготовка</span>
+        <span id="day0-status">Не начат</span>
+    </div>
+    <div class="progress-item">
+        <span>Библиотека промптов</span>
+        <span>✅ Доступна</span>
+    </div>
+    <div class="progress-item">
+        <span>Шпаргалки</span>
+        <span>✅ Доступны</span>
+    </div>
+</section>
+```
+
+**JavaScript для обновления статуса:**
+```javascript
+function updateDay0Status() {
+    const progress = getProgress();
+    const day0Completed = progress.day0?.completed || false;
+    const statusElement = document.getElementById('day0-status');
+    
+    if (day0Completed) {
+        statusElement.textContent = '✅ Пройден';
+        statusElement.style.color = 'var(--success)';
+    } else {
+        const day0Visited = localStorage.getItem('day0_visited');
+        if (day0Visited) {
+            statusElement.textContent = '📖 В процессе';
+            statusElement.style.color = 'var(--warning)';
+        } else {
+            statusElement.textContent = 'Не начат';
+        }
+    }
+}
+```
+
+---
+
+## 💬 МАРКЕТИНГОВЫЕ МАТЕРИАЛЫ
+
+### Текст для рекламы
+
+**Короткий (Telegram-каналы, Instagram bio):**
+
+> Бесплатный урок по созданию проектов с ИИ 🍕
+> 90 минут + 14 промптов + шпаргалки
+> Всё в Telegram Mini App
+> [Ссылка]
+
+**Средний (посты, описания видео):**
+
+> **Бесплатный вводный урок: Создание проектов с помощью ИИ**
+> 
+> 🎁 Что получите:
+> • 90 минут структурированного контента
+> • Установка всех инструментов (VS Code, Git, Node.js)
+> • Создание первой веб-страницы через ChatGPT
+> • Создание Telegram бота
+> • Библиотека из 14 готовых промптов
+> • Шпаргалки по командам и инструментам
+> 
+> 📱 Формат: Telegram Mini App (не PDF!)
+> 💰 Полностью бесплатно, навсегда
+> 
+> [Начать обучение]
+
+**Длинный (лендинг, email-рассылка):**
+
+> **Научитесь создавать цифровые проекты с помощью ИИ**
+> 
+> Пройдите бесплатный вводный урок и убедитесь, что создавать приложения без программирования — реально.
+> 
+> **Что вы получите бесплатно:**
+> 
+> **День 0: Подготовка (90 минут)**
+> • Регистрация и настройка ChatGPT/Claude
+> • Установка всех необходимых инструментов
+> • Основы работы с терминалом
+> • Практика: создание первой веб-страницы
+> • Создание Telegram бота
+> 
+> **Библиотека из 14+ промптов**
+> • Готовые промпты для ChatGPT/Claude
+> • Копирование в один клик
+> • Проверенные на практике
+> 
+> **Шпаргалки**
+> • Команды терминала
+> • Горячие клавиши VS Code
+> • Основные команды Git
+> • Полезные ссылки
+> 
+> **Формат:** Современное приложение в Telegram (не скучные PDF-файлы!)
+> 
+> **Стоимость:** 0₽ (навсегда бесплатно)
+> 
+> **Хотите продолжить?**
+> После бесплатного урока вы сможете записаться на полный курс (Дни 1-7) и создать полноценное Telegram Mini App для доставки пиццы.
+> 
+> [Начать бесплатный урок]
+
+---
+
+## 🔄 ВОРОНКА КОНВЕРСИИ
+
+### Путь пользователя
+```
+1. Увидел рекламу "Бесплатный урок"
+   ↓
+2. Перешёл по ссылке → Открыл бота
+   ↓
+3. Нажал "Открыть курс" → TMA загрузился
+   ↓
+4. Увидел главную: День 0 с бейджем "Бесплатно"
+   ↓
+5. Открыл День 0 → Начал изучение
+   ↓
+6. Прошёл практику (установил инструменты, создал страницу)
+   ↓
+7. Дошёл до конца Дня 0 → Увидел CTA "Записаться на курс"
+   ↓
+8. Открыл библиотеку промптов → Скопировал промпты
+   ↓
+9. Увидел Дни 1-7 с замками → Захотел продолжения
+   ↓
+10. Нажал "Записаться на курс" → Написал преподавателю
+```
+
+**Ожидаемая конверсия:**
+
+- 70% открывают TMA
+- 50% начинают День 0
+- 30% проходят День 0 до конца
+- 10% кликают "Записаться"
+- 3-5% реально записываются на курс
+
+---
+
+## ✅ ЧЕК-ЛИСТ ВНЕДРЕНИЯ
+
+### Код
+
+- [ ] Обновить `access.js` (PUBLIC_DAYS, функции)
+- [ ] Обновить `app.js` (рендеринг, модальное окно)
+- [ ] Обновить `style.css` (бейджи, модальное окно)
+- [ ] Обновить бота (команды /start, /enroll)
+- [ ] Добавить CTA в конец `day-0.md`
+- [ ] Добавить Google Analytics (опционально)
+
+### Контент
+
+- [ ] Проверить День 0 на опечатки
+- [ ] Убедиться что все промпты в библиотеке
+- [ ] Проверить шпаргалки на актуальность
+- [ ] Добавить CTA в конец Дня 0
+
+### Тестирование
+
+- [ ] Открыть TMA без кодов → День 0 доступен
+- [ ] Открыть библиотеку → все промпты видны
+- [ ] Открыть шпаргалки → всё отображается
+- [ ] Попробовать открыть День 1 → модальное окно с предложением записаться
+- [ ] Кликнуть "Записаться" → открывается чат с преподавателем
+- [ ] Пройти День 0 до конца → CTA отображается
+- [ ] Протестировать на мобильном
+
+### Деплой
+
+- [ ] Закоммитить изменения
+- [ ] Задеплоить TMA на Vercel
+- [ ] Задеплоить бота на Railway
+- [ ] Протестировать в реальном Telegram
+
+### Маркетинг
+
+- [ ] Подготовить тексты для рекламы
+- [ ] Создать креативы (скриншоты TMA)
+- [ ] Настроить аналитику
+- [ ] Запустить рекламу
+
+---
+
+## 📝 ПРИМЕЧАНИЯ
+
+### Важно
+
+- День 0 должен быть **безупречным** — это первое впечатление
+- CTA в конце Дня 0 должен быть **мягким**, не агрессивным
+- Модальное окно записи — **информативным**, без давления
+- Бесплатный контент — **реально ценным**, не "обрезком"
+
+### Рекомендации
+
+- Периодически обновлять библиотеку промптов
+- Собирать обратную связь от пользователей бесплатной версии
+- A/B тестировать CTA в конце Дня 0
+- Отслеживать метрики (сколько доходят до конца, где отваливаются)
+
+---
+
+## 🚀 ИТОГИ
+
+Эти изменения превращают TMA из закрытого курса в **lead magnet** с мощной воронкой конверсии.
+
+**Ключевые преимущества:**
+
+✅ Реальная ценность бесплатно (90 минут + промпты)  
+✅ Демонстрация качества материалов  
+✅ Вовлечение через практику  
+✅ Мягкий переход к платной части  
+✅ Современный формат (TMA вместо PDF)  
+
+**Ожидаемый эффект:**
+
+- Рост числа пользователей бота в 3-5 раз
+- Конверсия в записи на курс 3-5% от всех пользователей
+- Органический рост через сарафанное радио
+
+---
+
+**Версия дополнения:** 1.0  
+**Совместимо с основной документацией:** 1.0  
+**Дата:** Март 2026
+
+---
+
+**ГОТОВО К ВНЕДРЕНИЮ!** 🎉
