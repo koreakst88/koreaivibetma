@@ -19,7 +19,14 @@
     <link rel="stylesheet" href="css/style.css">
 
     <!-- Стилизация для Markdown контента -->
-    <style>
+    <style type="text/tailwindcss">
+        .markdown-content {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            hyphens: auto;
+        }
+
         .markdown-content h1 {
             @apply text-3xl font-bold mt-8 mb-4 text-gray-900;
         }
@@ -87,9 +94,9 @@
     </style>
 </head>
 
-<body class="bg-gray-50 text-gray-900 font-sans min-h-screen flex flex-col">
+<body class="bg-gray-50 text-gray-900 font-sans min-h-screen flex flex-col overflow-x-hidden">
 
-    <div class="container max-w-3xl mx-auto p-4 flex-grow flex flex-col">
+    <div class="container max-w-3xl mx-auto p-4 flex-grow flex flex-col w-full">
 
         <!-- Header -->
         <header class="mb-6 flex items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100">
