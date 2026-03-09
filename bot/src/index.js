@@ -2,6 +2,7 @@ import { Bot } from 'grammy';
 import dotenv from 'dotenv';
 import { handleStart } from './handlers/start.js';
 import { handleUnlockCommand, handleUnlockCode } from './handlers/unlock.js';
+import { trackEnrollmentInterest } from './utils/analytics.js';
 
 // Загрузка переменных окружения
 dotenv.config();
@@ -46,7 +47,7 @@ bot.command('help', async (ctx) => {
 
 Просто нажмите /start чтобы начать! 🚀
     `.trim();
-    
+
     await ctx.reply(message, { parse_mode: 'HTML' });
 });
 
@@ -55,6 +56,9 @@ bot.command('unlock', handleUnlockCommand);
 
 // Команда /enroll
 bot.command('enroll', async (ctx) => {
+    // Отслеживаем интерес к записи
+    await trackEnrollmentInterest(ctx.from.id);
+
     const message = `
 💎 <b>Полный курс "Vibe Coding"</b>
 
@@ -79,7 +83,7 @@ bot.command('enroll', async (ctx) => {
 
 🎁 День 0 доступен бесплатно - нажмите /start
     `.trim();
-    
+
     await ctx.reply(message, { parse_mode: 'HTML' });
 });
 
@@ -89,7 +93,7 @@ bot.on('message:text', async (ctx) => {
     if (ctx.message.text.startsWith('/')) {
         return;
     }
-    
+
     // Обрабатываем как код разблокировки
     await handleUnlockCode(ctx);
 });
@@ -99,7 +103,7 @@ bot.catch((err) => {
     const ctx = err.ctx;
     console.error(`Ошибка при обработке обновления ${ctx.update.update_id}:`);
     const e = err.error;
-    
+
     if (e instanceof Error) {
         console.error('Ошибка:', e.message);
         console.error('Stack:', e.stack);

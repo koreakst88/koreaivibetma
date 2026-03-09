@@ -1,5 +1,6 @@
 import { InlineKeyboard } from 'grammy';
 import { UNLOCK_CODES, DAYS_INFO } from '../config/codes.js';
+import { trackCodeEntered } from '../utils/analytics.js';
 
 export async function handleUnlockCommand(ctx) {
     const message = `
@@ -11,14 +12,14 @@ export async function handleUnlockCommand(ctx) {
 
 Просто отправьте код следующим сообщением.
     `.trim();
-    
+
     await ctx.reply(message, { parse_mode: 'HTML' });
 }
 
 export async function handleUnlockCode(ctx) {
     const code = ctx.message.text.trim().toUpperCase();
     const tmaUrl = process.env.TMA_URL;
-    
+
     // Проверка кода в UNLOCK_CODES
     if (!UNLOCK_CODES[code]) {
         await ctx.reply(
@@ -29,20 +30,23 @@ export async function handleUnlockCode(ctx) {
         );
         return;
     }
-    
+
     const dayId = UNLOCK_CODES[code];
     const dayInfo = DAYS_INFO[dayId];
-    
+
     if (!dayInfo) {
         await ctx.reply('❌ Ошибка конфигурации кода. Обратитесь к преподавателю.');
         return;
     }
-    
+
+    // Отслеживаем разблокировку
+    await trackCodeEntered(ctx.from.id, code, dayId);
+
     // Создание кнопки с параметром unlock
     const unlockUrl = `${tmaUrl}?unlock=${code}`;
     const keyboard = new InlineKeyboard()
         .webApp('🎓 Открыть урок', unlockUrl);
-    
+
     const message = `
 ✅ <b>Код принят!</b>
 
@@ -51,7 +55,7 @@ export async function handleUnlockCode(ctx) {
 
 Нажмите кнопку ниже, чтобы открыть урок и начать обучение!
     `.trim();
-    
+
     await ctx.reply(message, {
         parse_mode: 'HTML',
         reply_markup: keyboard

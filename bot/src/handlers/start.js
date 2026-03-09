@@ -1,11 +1,13 @@
 import { InlineKeyboard } from 'grammy';
+import { trackBotStart } from '../utils/analytics.js';
 
 export async function handleStart(ctx) {
+    await trackBotStart(ctx.from.id, ctx.from.username);
     const tmaUrl = process.env.TMA_URL;
-    
+
     const keyboard = new InlineKeyboard()
         .webApp('🚀 Открыть курс', tmaUrl);
-    
+
     const message = `
 👋 Добро пожаловать в <b>Vibe Coding</b>!
 
@@ -19,7 +21,7 @@ export async function handleStart(ctx) {
 
 📱 Нажмите кнопку ниже, чтобы начать обучение!
     `.trim();
-    
+
     await ctx.reply(message, {
         parse_mode: 'HTML',
         reply_markup: keyboard
