@@ -1,7 +1,7 @@
 import { InlineKeyboard } from 'grammy';
 import { UNLOCK_CODES, DAYS_INFO } from '../config/codes.js';
 import { trackCodeEntered } from '../utils/analytics.js';
-import { trackEvent } from '../utils/amplitude.js';
+import { trackEvent, setUserProperties } from '../utils/amplitude.js';
 
 export async function handleUnlockCommand(ctx) {
     const message = `
@@ -24,6 +24,11 @@ export async function handleUnlockCode(ctx) {
     // Проверка кода в UNLOCK_CODES
     if (!UNLOCK_CODES[code]) {
         // Track failed attempt if needed, or just success false. But prompt asks to track code_entered with code text
+        setUserProperties(ctx.from.id, {
+            username: ctx.from.username,
+            first_name: ctx.from.first_name,
+            language_code: ctx.from.language_code
+        });
         trackEvent(ctx.from.id, 'code_entered', {
             code: code,
             success: false
@@ -48,6 +53,11 @@ export async function handleUnlockCode(ctx) {
 
     // Отслеживаем разблокировку
     await trackCodeEntered(ctx.from.id, code, dayId);
+    setUserProperties(ctx.from.id, {
+        username: ctx.from.username,
+        first_name: ctx.from.first_name,
+        language_code: ctx.from.language_code
+    });
     trackEvent(ctx.from.id, 'code_entered', {
         code: code,
         day: dayId,

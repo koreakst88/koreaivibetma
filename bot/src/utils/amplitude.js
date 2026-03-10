@@ -10,7 +10,7 @@ export function initAmplitude() {
         console.warn('⚠️ [Amplitude] API Key missing or placeholder. Running in dry mode.');
         return;
     }
-    
+
     try {
         amplitude.init(apiKey, {
             logLevel: amplitude.Types.LogLevel.Warn,
@@ -27,10 +27,19 @@ initAmplitude();
 
 export async function setUserProperties(userId, userProperties) {
     if (!userId) return;
-    
+
+    // Установить display name для лучшего отображения
+    const { username, first_name } = userProperties;
+    const displayName = username || first_name || `User ${userId}`;
+
     try {
         if (isInitialized) {
             const identifyObj = new amplitude.Identify();
+
+            // Задаем специальное поле, чтобы в Amplitude отображалось красивое имя
+            identifyObj.set('name', displayName);
+            identifyObj.set('displayName', displayName);
+
             for (const [key, value] of Object.entries(userProperties)) {
                 if (value !== undefined && value !== null) {
                     identifyObj.set(key, value);
@@ -46,7 +55,7 @@ export async function setUserProperties(userId, userProperties) {
 
 export async function trackEvent(userId, eventName, eventProperties = {}) {
     if (!userId) return;
-    
+
     try {
         const payload = {
             event_type: eventName,
@@ -56,7 +65,7 @@ export async function trackEvent(userId, eventName, eventProperties = {}) {
                 timestamp: Date.now()
             }
         };
-        
+
         if (isInitialized) {
             amplitude.track(payload);
         }
