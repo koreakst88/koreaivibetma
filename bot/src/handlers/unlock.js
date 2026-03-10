@@ -1,6 +1,7 @@
 import { InlineKeyboard } from 'grammy';
 import { UNLOCK_CODES, DAYS_INFO } from '../config/codes.js';
 import { trackCodeEntered } from '../utils/analytics.js';
+import { trackEvent } from '../utils/amplitude.js';
 
 export async function handleUnlockCommand(ctx) {
     const message = `
@@ -22,6 +23,12 @@ export async function handleUnlockCode(ctx) {
 
     // Проверка кода в UNLOCK_CODES
     if (!UNLOCK_CODES[code]) {
+        // Track failed attempt if needed, or just success false. But prompt asks to track code_entered with code text
+        trackEvent(ctx.from.id, 'code_entered', {
+            code: code,
+            success: false
+        });
+
         await ctx.reply(
             '❌ Неверный код разблокировки.\n\n' +
             'Проверьте правильность кода и попробуйте снова.\n' +
@@ -41,6 +48,11 @@ export async function handleUnlockCode(ctx) {
 
     // Отслеживаем разблокировку
     await trackCodeEntered(ctx.from.id, code, dayId);
+    trackEvent(ctx.from.id, 'code_entered', {
+        code: code,
+        day: dayId,
+        success: true
+    });
 
     // Создание кнопки с параметром unlock
     const unlockUrl = `${tmaUrl}?unlock=${code}`;

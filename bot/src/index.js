@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import { handleStart } from './handlers/start.js';
 import { handleUnlockCommand, handleUnlockCode } from './handlers/unlock.js';
 import { trackEnrollmentInterest } from './utils/analytics.js';
+import { trackEvent } from './utils/amplitude.js';
 
 // Загрузка переменных окружения
 dotenv.config();
@@ -58,6 +59,7 @@ bot.command('unlock', handleUnlockCommand);
 bot.command('enroll', async (ctx) => {
     // Отслеживаем интерес к записи
     await trackEnrollmentInterest(ctx.from.id);
+    trackEvent(ctx.from.id, 'enrollment_interest');
 
     const message = `
 💎 <b>Полный курс "Vibe Coding"</b>
@@ -96,6 +98,11 @@ bot.on('message:text', async (ctx) => {
 
     // Обрабатываем как код разблокировки
     await handleUnlockCode(ctx);
+});
+
+// Обработка данных от WebApp (если кнопка отправляет web_app_data)
+bot.on('message:web_app_data', async (ctx) => {
+    trackEvent(ctx.from.id, 'tma_opened');
 });
 
 // Обработка ошибок

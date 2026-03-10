@@ -1,8 +1,18 @@
 import { InlineKeyboard } from 'grammy';
 import { trackBotStart } from '../utils/analytics.js';
+import { trackEvent, setUserProperties } from '../utils/amplitude.js';
 
 export async function handleStart(ctx) {
     await trackBotStart(ctx.from.id, ctx.from.username);
+
+    // Amplitude tracking (asynchronous, non-blocking)
+    setUserProperties(ctx.from.id, {
+        username: ctx.from.username,
+        first_name: ctx.from.first_name,
+        language_code: ctx.from.language_code
+    });
+    trackEvent(ctx.from.id, 'bot_started');
+
     const tmaUrl = process.env.TMA_URL;
 
     const keyboard = new InlineKeyboard()
