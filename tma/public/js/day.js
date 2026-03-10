@@ -40,9 +40,49 @@ async function loadDayContent() {
 
         const markdown = await response.text();
 
+        // Настройка marked.js для добавления id к заголовкам
+        const renderer = {
+            heading(token) {
+                const text = typeof token === 'object' ? token.text : arguments[0];
+                const depth = typeof token === 'object' ? token.depth : arguments[1];
+
+                // Очищаем текст от HTML-тегов перед созданием id
+                const plainText = text.replace(/<[^>]+>/g, '');
+                const id = plainText.toLowerCase()
+                    .replace(/[^\wа-яА-ЯёЁa-zA-Z0-9]+/g, '-')
+                    .replace(/(^-|-$)/g, '');
+
+                return `<h${depth} id="${id}">${text}</h${depth}>`;
+            }
+        };
+        marked.use({ renderer });
+
         // Рендерим через marked.js
         const html = marked.parse(markdown);
         container.innerHTML = html;
+
+        // Плавная прокрутка для якорных ссылок (Оглавление) специально для Telegram WebApp
+        const anchorLinks = container.querySelectorAll('a[href^="#"]');
+        anchorLinks.forEach(link => {
+            link.addEventListener('click', function (e) {
+                e.preventDefault();
+                let targetId = this.getAttribute('href').substring(1);
+
+                // Ищем элемент (с учетом возможного URL encoding)
+                let targetElement = document.getElementById(targetId) || document.getElementById(decodeURIComponent(targetId));
+
+                if (targetElement) {
+                    const headerOffset = 85; // отступ под липкую шапку
+                    const elementPosition = targetElement.getBoundingClientRect().top;
+                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
 
         // Если есть функция обработки чек-листов (progress.js)
         if (typeof processChecklists === 'function') {
