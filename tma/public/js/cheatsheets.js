@@ -37,6 +37,19 @@ function switchTab(tabName) {
     // Рендерим контент
     renderCheatsheet(tabName);
 
+    // Событие: пользователь открыл шпаргалку (переключил таб)
+    if (typeof trackEvent === 'function') {
+        try {
+            const tabTitle = cheatsheetsData[tabName] ? cheatsheetsData[tabName].title : tabName;
+            trackEvent('cheatsheet_opened', {
+                tab: tabName,
+                tab_title: tabTitle,
+            });
+        } catch (err) {
+            console.warn('[Analytics] Ошибка трекинга cheatsheet_opened:', err);
+        }
+    }
+
     // Легкая вибрация при переключении
     if (typeof vibrate === 'function') vibrate('light');
 }

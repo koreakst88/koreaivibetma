@@ -72,6 +72,22 @@ function renderPrompts(prompts) {
 // 2. Функция togglePrompt(promptId)
 function togglePrompt(promptId) {
     promptStates[promptId] = !promptStates[promptId];
+
+    // Событие: пользователь развернул промпт (просмотр)
+    if (promptStates[promptId] === true && typeof trackEvent === 'function') {
+        try {
+            const promptData = promptsData.find(p => p.id === promptId);
+            trackEvent('prompt_viewed', {
+                prompt_id: promptId,
+                prompt_title: promptData ? promptData.title : '',
+                prompt_day: promptData ? promptData.day : '',
+                prompt_category: promptData ? promptData.category : '',
+            });
+        } catch (err) {
+            console.warn('[Analytics] Ошибка трекинга prompt_viewed:', err);
+        }
+    }
+
     // Перерисовываем с учетом текущего поиска
     searchPrompts();
 }
@@ -88,6 +104,20 @@ function copyPrompt(promptId) {
             vibrate('light');
         } else if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
             window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+        }
+
+        // Событие: пользователь скопировал промпт
+        if (typeof trackEvent === 'function') {
+            try {
+                trackEvent('prompt_copied', {
+                    prompt_id: promptId,
+                    prompt_title: promptData.title,
+                    prompt_day: promptData.day,
+                    prompt_category: promptData.category,
+                });
+            } catch (err) {
+                console.warn('[Analytics] Ошибка трекинга prompt_copied:', err);
+            }
         }
 
         showToast('✅ Промпт скопирован!');

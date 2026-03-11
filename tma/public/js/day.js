@@ -19,11 +19,23 @@ async function loadDayContent() {
         return;
     }
 
+    // Получаем заголовок дня для аналитики
+    let dayTitle = `День #${dayId.replace('day', '')}`;
+
     // Присваиваем заголовок из конфигурации
     if (typeof DAYS_CONFIG !== 'undefined' && DAYS_CONFIG[dayId]) {
-        document.getElementById('day-title').textContent = DAYS_CONFIG[dayId].title;
+        dayTitle = DAYS_CONFIG[dayId].title;
+        document.getElementById('day-title').textContent = dayTitle;
     } else {
-        document.getElementById('day-title').textContent = `День #${dayId.replace('day', '')}`;
+        document.getElementById('day-title').textContent = dayTitle;
+    }
+
+    // Событие: пользователь открыл день
+    if (typeof trackEvent === 'function') {
+        trackEvent('day_opened', {
+            day_id: dayId,
+            day_title: dayTitle,
+        });
     }
 
     try {
@@ -89,12 +101,23 @@ async function loadDayContent() {
             processChecklists(dayId);
         }
 
+        // Навешиваем трекинг на чек-боксы после processChecklists
+        _trackChecklistEvents(dayId, dayTitle);
+
         // Если загрузка успешна, вычисляем кнопки навигации
         setupNavigation(dayId);
 
         // Отмечаем день как пройденный (если функция доступна)
         if (typeof markDayCompleted === 'function') {
             markDayCompleted(dayId);
+        }
+
+        // Событие: день завершён (контент загружен и отмечен как пройденный)
+        if (typeof trackEvent === 'function') {
+            trackEvent('day_completed', {
+                day_id: dayId,
+                day_title: dayTitle,
+            });
         }
 
         // Посылаем легкую вибрацию
@@ -114,6 +137,46 @@ async function loadDayContent() {
                 </button>
             </div>
         `;
+    }
+}
+
+/**
+ * Навешивает трекинг событий на чек-боксы дня.
+ * Вызывается после processChecklists, чтобы чек-боксы уже были в DOM.
+ * @param {string} dayId
+ * @param {string} dayTitle
+ */
+function _trackChecklistEvents(dayId, dayTitle) {
+    try {
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        if (checkboxes.length === 0) return;
+
+        checkboxes.forEach((checkbox, index) => {
+            checkbox.addEventListener('change', function () {
+                if (!this.checked) return; // трекаем только отметку (не снятие)
+
+                try {
+                    // Считаем, сколько чек-боксов отмечено
+                    const total = checkboxes.length;
+                    const completed = Array.from(checkboxes).filter(cb => cb.checked).length;
+
+                    // Событие: отмечен один чек-бокс
+                    if (typeof trackEvent === 'function') {
+                        trackEvent('checklist_completed', {
+                            day_id: dayId,
+                            day_title: dayTitle,
+                            checkbox_index: index,
+                            completed_count: completed,
+                            total_count: total,
+                        });
+                    }
+                } catch (err) {
+                    console.warn('[Analytics] Ошибка трекинга чек-листа:', err);
+                }
+            });
+        });
+    } catch (err) {
+        console.warn('[Analytics] _trackChecklistEvents ошибка:', err);
     }
 }
 
