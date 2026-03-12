@@ -12,10 +12,7 @@ if (typeof tg.disableVerticalSwipes === 'function') {
     tg.disableVerticalSwipes();
 }
 
-// Полноэкранный режим (Bot API 8.0+)
-if (typeof tg.requestFullscreen === 'function') {
-    tg.requestFullscreen();
-}
+// Полноэкранный режим НЕ используем — перекрывает нативный UI Telegram
 
 // 2. Функция applyTelegramTheme()
 // Применяем цвета из Telegram к нашему приложению

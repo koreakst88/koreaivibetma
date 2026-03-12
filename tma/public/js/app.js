@@ -192,10 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typeof tgApp.disableVerticalSwipes === 'function') {
             tgApp.disableVerticalSwipes();
         }
-        // Запрашиваем полноэкранный режим (Bot API 8.0+)
-        if (typeof tgApp.requestFullscreen === 'function') {
-            tgApp.requestFullscreen();
-        }
+        // Запрашиваем полноэкранный режим — НЕ используем, перекрывает UI Telegram
     }
 
     // Инициализация аналитики
