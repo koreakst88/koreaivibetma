@@ -48,6 +48,7 @@ function initAnalytics(user) {
                 }
 
                 console.log('[Analytics] Amplitude инициализирован', user ? `userId=${user.id}` : '(без userId)');
+                alert('[Analytics] Amplitude инициализирован, userId: ' + (user?.id || 'нет'));
             } catch (err) {
                 console.warn('[Analytics] Ошибка инициализации Amplitude:', err);
             }
@@ -58,6 +59,17 @@ function initAnalytics(user) {
         console.warn('[Analytics] initAnalytics ошибка:', err);
     }
 }
+
+window.debugAmplitude = function() {
+    console.log('amplitude loaded:', typeof amplitude);
+    console.log('trackEvent:', typeof trackEvent);
+    try {
+        trackEvent('debug_test', {source: 'manual'});
+        alert('trackEvent вызван успешно');
+    } catch(e) {
+        alert('Ошибка: ' + e.message);
+    }
+};
 
 /**
  * Отправить кастомное событие в Amplitude.
