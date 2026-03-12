@@ -10,7 +10,20 @@ const AMPLITUDE_API_KEY = 'a0ef1f1f77f50fd4c880d99062da5375';
  */
 function initAnalytics(user) {
     console.log('[Analytics] initAnalytics вызван, amplitude:', typeof amplitude);
-    
+
+    // Прямой HTTP запрос к Amplitude API — без SDK
+    fetch('https://api.amplitude.com/2/httpapi', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            api_key: 'a0ef1f1f77f50fd4c880d99062da5375',
+            events: [{
+                event_type: 'tma_opened_fetch',
+                device_id: 'tma-test-' + Date.now()
+            }]
+        })
+    });
+
     setTimeout(() => {
         console.log('[Analytics] setTimeout сработал, amplitude:', typeof amplitude);
         
