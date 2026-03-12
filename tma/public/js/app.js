@@ -183,10 +183,19 @@ function promptUnlockCode(dayId) {
 
 // 6. Инициализация
 document.addEventListener('DOMContentLoaded', () => {
-    // Разворачиваем приложение и предотвращаем случайное закрытие при свайпах
+    // Предотвращаем сворачивание при скроллинге
     if (window.Telegram && window.Telegram.WebApp) {
-        window.Telegram.WebApp.expand();
-        window.Telegram.WebApp.disableClosingConfirmation();
+        const tgApp = window.Telegram.WebApp;
+        // Разворачиваем на весь экран
+        tgApp.expand();
+        // Отключаем вертикальные свайпы (Bot API 7.7+)
+        if (typeof tgApp.disableVerticalSwipes === 'function') {
+            tgApp.disableVerticalSwipes();
+        }
+        // Запрашиваем полноэкранный режим (Bot API 8.0+)
+        if (typeof tgApp.requestFullscreen === 'function') {
+            tgApp.requestFullscreen();
+        }
     }
 
     // Инициализация аналитики

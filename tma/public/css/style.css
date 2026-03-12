@@ -43,6 +43,16 @@ body {
   /* Дополнительные стили для улучшения внешнего вида шрифтов */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Предотвращаем браузерный overscroll, который вызывает сворачивание TMA */
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
+  /* Разрешаем только вертикальный скролл, блокируем горизонтальные жесты */
+  touch-action: pan-y;
+}
+
+/* HTML тоже должен иметь overscroll-behavior: none */
+html {
+  overscroll-behavior: none;
 }
 
 /* Для скрытия стандартного скроллбара в табах, но сохранения функционала */

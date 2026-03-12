@@ -7,6 +7,16 @@ const tg = window.Telegram.WebApp;
 tg.ready();
 tg.expand();
 
+// Отключаем вертикальные свайпы (Bot API 7.7+) — предотвращает сворачивание при скролле
+if (typeof tg.disableVerticalSwipes === 'function') {
+    tg.disableVerticalSwipes();
+}
+
+// Полноэкранный режим (Bot API 8.0+)
+if (typeof tg.requestFullscreen === 'function') {
+    tg.requestFullscreen();
+}
+
 // 2. Функция applyTelegramTheme()
 // Применяем цвета из Telegram к нашему приложению
 function applyTelegramTheme() {
