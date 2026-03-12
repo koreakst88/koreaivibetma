@@ -183,6 +183,12 @@ function promptUnlockCode(dayId) {
 
 // 6. Инициализация
 document.addEventListener('DOMContentLoaded', () => {
+    // Разворачиваем приложение и предотвращаем случайное закрытие при свайпах
+    if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.expand();
+        window.Telegram.WebApp.disableClosingConfirmation();
+    }
+
     // Инициализация аналитики
     try {
         const tgUser = (typeof Telegram !== 'undefined' && 
