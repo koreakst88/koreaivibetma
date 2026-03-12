@@ -20,39 +20,25 @@ function initAnalytics(user) {
         setTimeout(() => {
             try {
                 amplitude.init(AMPLITUDE_API_KEY, {
-                    defaultTracking: false, // только кастомные события
-                    autocapture: false,
+                    defaultTracking: false,
+                    autocapture: false
                 });
 
-                // Устанавливаем userId из Telegram, если пользователь доступен
                 if (user && user.id) {
                     amplitude.setUserId(String(user.id));
-
-                    // Устанавливаем user properties
-                    const identifyEvent = new amplitude.Identify();
-
-                    if (user.username) {
-                        identifyEvent.set('username', user.username);
-                    }
-                    if (user.first_name) {
-                        identifyEvent.set('first_name', user.first_name);
-                    }
-                    if (user.last_name) {
-                        identifyEvent.set('last_name', user.last_name);
-                    }
-                    if (user.language_code) {
-                        identifyEvent.set('language_code', user.language_code);
-                    }
-
-                    amplitude.identify(identifyEvent);
                 }
 
-                console.log('[Analytics] Amplitude инициализирован', user ? `userId=${user.id}` : '(без userId)');
-                alert('[Analytics] Amplitude инициализирован, userId: ' + (user?.id || 'нет'));
-            } catch (err) {
-                console.warn('[Analytics] Ошибка инициализации Amplitude:', err);
+                amplitude.track('tma_opened', {
+                    page: window.location.pathname,
+                    has_user: !!(user && user.id)
+                });
+
+                alert('[Analytics] OK. User: ' + JSON.stringify(user));
+
+            } catch (e) {
+                alert('[Analytics] ОШИБКА: ' + e.message);
             }
-        }, 0);
+        }, 500);
 
     } catch (err) {
         // TMA может открываться вне Telegram — не ломаем приложение
