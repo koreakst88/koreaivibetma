@@ -9,37 +9,35 @@ const AMPLITUDE_API_KEY = 'a0ef1f1f77f50fd4c880d99062da5375';
  * @param {Object|null} user — объект из Telegram.WebApp.initDataUnsafe.user
  */
 function initAnalytics(user) {
-    try {
-        if (typeof amplitude === 'undefined') return;
-
-        setTimeout(() => {
-            try {
-                console.log('[Analytics] setTimeout сработал, amplitude:', typeof amplitude);
-                amplitude.init(AMPLITUDE_API_KEY, {
-                    defaultTracking: false,
-                    autocapture: false
-                });
-                console.log('[Analytics] amplitude.init вызван');
-
-                if (user && user.id) {
-                    amplitude.setUserId(String(user.id));
-                }
-
-                // Отправляем событие открытия приложения
-                trackEvent('tma_opened', { 
-                    page: 'home',
-                    path: window.location.pathname 
-                });
-                console.log('[Analytics] tma_opened отправлен');
-
-            } catch (e) {
-                // Ошибки аналитики не должны прерывать работу приложения
+    console.log('[Analytics] initAnalytics вызван, amplitude:', typeof amplitude);
+    
+    setTimeout(() => {
+        console.log('[Analytics] setTimeout сработал, amplitude:', typeof amplitude);
+        
+        try {
+            if (typeof amplitude === 'undefined') {
+                console.warn('[Analytics] amplitude не загружен!');
+                return;
             }
-        }, 500);
-
-    } catch (err) {
-        // Ошибки аналитики не должны прерывать работу приложения
-    }
+            
+            amplitude.init(AMPLITUDE_API_KEY, {
+                defaultTracking: false,
+                autocapture: false
+            });
+            
+            console.log('[Analytics] amplitude.init вызван успешно');
+            
+            if (user && user.id) {
+                amplitude.setUserId(String(user.id));
+            }
+            
+            trackEvent('tma_opened', { page: 'home' });
+            console.log('[Analytics] tma_opened отправлен');
+            
+        } catch(e) {
+            console.error('[Analytics] ошибка:', e.message);
+        }
+    }, 500);
 }
 
 /**
