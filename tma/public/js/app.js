@@ -183,20 +183,15 @@ function promptUnlockCode(dayId) {
 
 // 6. Инициализация
 document.addEventListener('DOMContentLoaded', () => {
-    // Инициализация аналитики — берём пользователя из Telegram WebApp
-    if (typeof initAnalytics === 'function') {
-        try {
-            const tgUser = window.Telegram &&
-                window.Telegram.WebApp &&
-                window.Telegram.WebApp.initDataUnsafe &&
-                window.Telegram.WebApp.initDataUnsafe.user
-                    ? window.Telegram.WebApp.initDataUnsafe.user
-                    : null;
+    // Инициализация аналитики
+    try {
+        const tgUser = (typeof Telegram !== 'undefined' && 
+            Telegram.WebApp?.initDataUnsafe?.user) || null;
+        
+        if (typeof initAnalytics === 'function') {
             initAnalytics(tgUser);
-        } catch (err) {
-            console.warn('Ошибка инициализации аналитики:', err);
         }
-    }
+    } catch(e) {}
 
     // В случае если DAYS_CONFIG загрузился до app.js
     if (typeof DAYS_CONFIG !== 'undefined') {
