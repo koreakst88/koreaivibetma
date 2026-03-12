@@ -1,4 +1,5 @@
 // tma/public/js/analytics.js
+alert('analytics.js загружен');
 // Amplitude Browser SDK — аналитика для Vibe Coding Course TMA
 
 const AMPLITUDE_API_KEY = 'a0ef1f1f77f50fd4c880d99062da5375'; // ← замените на реальный ключ
