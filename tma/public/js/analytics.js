@@ -14,10 +14,12 @@ function initAnalytics(user) {
 
         setTimeout(() => {
             try {
+                console.log('[Analytics] setTimeout сработал, amplitude:', typeof amplitude);
                 amplitude.init(AMPLITUDE_API_KEY, {
                     defaultTracking: false,
                     autocapture: false
                 });
+                console.log('[Analytics] amplitude.init вызван');
 
                 if (user && user.id) {
                     amplitude.setUserId(String(user.id));
@@ -28,6 +30,7 @@ function initAnalytics(user) {
                     page: 'home',
                     path: window.location.pathname 
                 });
+                console.log('[Analytics] tma_opened отправлен');
 
             } catch (e) {
                 // Ошибки аналитики не должны прерывать работу приложения
