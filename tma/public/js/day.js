@@ -65,7 +65,7 @@ async function loadDayContent() {
 
         const markdown = await response.text();
 
-        // Настройка marked.js для добавления id к заголовкам
+        // Настройка marked.js для добавления id к заголовкам и чекбоксов без disabled
         const renderer = {
             heading(token) {
                 const text = typeof token === 'object' ? token.text : arguments[0];
@@ -78,9 +78,17 @@ async function loadDayContent() {
                     .replace(/(^-|-$)/g, '');
 
                 return `<h${depth} id="${id}">${text}</h${depth}>`;
+            },
+            // Рендерим task list чекбоксы без атрибута disabled
+            checkbox(token) {
+                const checked = token.checked ? 'checked' : '';
+                return `<input type="checkbox" ${checked}>`;
             }
         };
-        marked.use({ renderer });
+        marked.use({ 
+            renderer,
+            gfm: true  // Включаем GitHub-стиль Markdown (task lists)
+        });
 
         // Рендерим через marked.js
         const html = marked.parse(markdown);
@@ -159,21 +167,25 @@ async function loadDayContent() {
  */
 function initChecklists(dayId) {
     const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-    
+
     // Загружаем сохраненные состояния из LocalStorage (progress.js)
     const savedProgress = JSON.parse(localStorage.getItem(`progress_${dayId}`)) || {};
 
     checkboxes.forEach((cb, index) => {
-        // Восстанавливаем состояние
-        if (savedProgress[index]) {
+        // Восстанавливаем состояние (используем строковый ключ для совместимости с JSON)
+        const key = String(index);
+        if (savedProgress[key] === true) {
             cb.checked = true;
         }
 
+        // Делаем чекбокс кликабельным (снимаем disabled если был)
+        cb.disabled = false;
+
         // Слушаем клики
         cb.addEventListener('change', () => {
-            savedProgress[index] = cb.checked;
+            savedProgress[key] = cb.checked;
             localStorage.setItem(`progress_${dayId}`, JSON.stringify(savedProgress));
-            
+
             // Легкая вибрация в Telegram при клике
             if (window.Telegram?.WebApp) {
                 window.Telegram.WebApp.HapticFeedback.impactOccurred('light');

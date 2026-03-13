@@ -324,16 +324,17 @@ function processChecklists(dayId) {
 
         // Обработать каждый чек-бокс
         checkboxes.forEach((checkbox, index) => {
-            // Восстановить состояние из прогресса
-            if (progress[dayId].checklists[index] === true) {
+            // Восстановить состояние из прогресса (используем строковый ключ для JSON)
+            const key = String(index);
+            if (progress[dayId].checklists[key] === true) {
                 checkbox.checked = true;
             }
 
             // Добавить обработчик изменения
             checkbox.addEventListener('change', function(event) {
                 const isChecked = event.target.checked;
-                updateChecklist(dayId, index, isChecked);
-                
+                updateChecklist(dayId, key, isChecked);
+
                 console.log(`Checkbox ${index} for day ${dayId} changed to ${isChecked}`);
             });
         });
