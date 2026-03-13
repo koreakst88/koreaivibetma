@@ -86,6 +86,9 @@ async function loadDayContent() {
         const html = marked.parse(markdown);
         container.innerHTML = html;
 
+        // Инициализируем чек-листы после рендеринга Markdown
+        initChecklists(dayId);
+
         // Плавная прокрутка для якорных ссылок (Оглавление) специально для Telegram WebApp
         const anchorLinks = container.querySelectorAll('a[href^="#"]');
         anchorLinks.forEach(link => {
@@ -109,12 +112,7 @@ async function loadDayContent() {
             });
         });
 
-        // Если есть функция обработки чек-листов (progress.js)
-        if (typeof processChecklists === 'function') {
-            processChecklists(dayId);
-        }
-
-        // Навешиваем трекинг на чек-боксы после processChecklists
+        // Навешиваем трекинг на чек-боксы после initChecklists
         _trackChecklistEvents(dayId, dayTitle);
 
         // Если загрузка успешна, вычисляем кнопки навигации
@@ -156,8 +154,37 @@ async function loadDayContent() {
 }
 
 /**
+ * Функция для инициализации чек-листов после рендеринга Markdown
+ * @param {string} dayId
+ */
+function initChecklists(dayId) {
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    
+    // Загружаем сохраненные состояния из LocalStorage (progress.js)
+    const savedProgress = JSON.parse(localStorage.getItem(`progress_${dayId}`)) || {};
+
+    checkboxes.forEach((cb, index) => {
+        // Восстанавливаем состояние
+        if (savedProgress[index]) {
+            cb.checked = true;
+        }
+
+        // Слушаем клики
+        cb.addEventListener('change', () => {
+            savedProgress[index] = cb.checked;
+            localStorage.setItem(`progress_${dayId}`, JSON.stringify(savedProgress));
+            
+            // Легкая вибрация в Telegram при клике
+            if (window.Telegram?.WebApp) {
+                window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+            }
+        });
+    });
+}
+
+/**
  * Навешивает трекинг событий на чек-боксы дня.
- * Вызывается после processChecklists, чтобы чек-боксы уже были в DOM.
+ * Вызывается после initChecklists, чтобы чек-боксы уже были в DOM.
  * @param {string} dayId
  * @param {string} dayTitle
  */
