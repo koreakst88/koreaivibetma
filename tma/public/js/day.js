@@ -32,6 +32,7 @@ async function loadDayContent() {
 
     // Событие: пользователь открыл день
     if (typeof trackEvent === 'function') {
+        console.log('[Day] Попытка отправить событие:', 'day_opened');
         setTimeout(() => trackEvent('day_opened', {
             day_id: dayId,
             day_title: dayTitle,
@@ -114,6 +115,7 @@ async function loadDayContent() {
 
         // Событие: день завершён (контент загружен и отмечен как пройденный)
         if (typeof trackEvent === 'function') {
+            console.log('[Day] Попытка отправить событие:', 'day_completed');
             setTimeout(() => trackEvent('day_completed', {
                 day_id: dayId,
                 day_title: dayTitle,
@@ -162,6 +164,7 @@ function _trackChecklistEvents(dayId, dayTitle) {
 
                     // Событие: отмечен один чек-бокс
                     if (typeof trackEvent === 'function') {
+                        console.log('[Day] Попытка отправить событие:', 'checklist_completed');
                         setTimeout(() => trackEvent('checklist_completed', {
                             day_id: dayId,
                             day_title: dayTitle,
