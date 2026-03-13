@@ -50,6 +50,21 @@ body {
   touch-action: pan-y;
 }
 
+/* Центрируем контент на больших экранах (десктопный Telegram) */
+@media (min-width: 768px) {
+  body {
+    display: flex;
+    justify-content: center;
+    background-color: var(--tg-bg);
+  }
+
+  #app-container {
+    max-width: 480px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    min-height: 100vh;
+  }
+}
+
 /* HTML тоже должен иметь overscroll-behavior: none */
 html {
   overscroll-behavior: none;
