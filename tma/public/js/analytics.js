@@ -2,6 +2,7 @@
 // Amplitude Browser SDK — аналитика для Vibe Coding Course TMA
 
 const AMPLITUDE_API_KEY = 'a0ef1f1f77f50fd4c880d99062da5375';
+let _amplitudeInitialized = false;
 
 /**
  * Инициализация Amplitude.
@@ -26,27 +27,30 @@ function initAnalytics(user) {
 
     setTimeout(() => {
         console.log('[Analytics] setTimeout сработал, amplitude:', typeof amplitude);
-        
+
         try {
             if (typeof amplitude === 'undefined') {
                 console.warn('[Analytics] amplitude не загружен!');
                 return;
             }
-            
-            amplitude.init(AMPLITUDE_API_KEY, {
-                defaultTracking: false,
-                autocapture: false
-            });
-            
-            console.log('[Analytics] amplitude.init вызван успешно');
-            
+
+            if (!_amplitudeInitialized) {
+                amplitude.init(AMPLITUDE_API_KEY, {
+                    defaultTracking: false,
+                    autocapture: false
+                });
+                _amplitudeInitialized = true;
+                console.log('[Analytics] amplitude.init вызван успешно');
+            }
+
             if (user && user.id) {
                 amplitude.setUserId(String(user.id));
             }
-            
-            trackEvent('tma_opened', { page: 'home' });
-            console.log('[Analytics] tma_opened отправлен');
-            
+
+            trackEvent('tma_opened', { 
+                page: window.location.pathname
+            });
+
         } catch(e) {
             console.error('[Analytics] ошибка:', e.message);
         }
