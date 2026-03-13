@@ -278,3 +278,23 @@ body.dark-theme .border-gray-200 { border-color: #2b3a4a; }
 body.dark-theme .markdown-content code { background-color: #2b3a4a; border-color: #3d5063; color: #ff7b72; }
 body.dark-theme .markdown-content pre { background-color: #0d1117; }
 body.dark-theme .markdown-content blockquote { background-color: rgba(51, 144, 236, 0.1); color: #a1b0c0; }
+
+/* 10. Стили для чек-листов и списков в контенте */
+.content-area ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.content-area li {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 8px;
+    gap: 10px;
+}
+
+input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: #007aff;
+}
