@@ -41,10 +41,10 @@ function switchTab(tabName) {
     if (typeof trackEvent === 'function') {
         try {
             const tabTitle = cheatsheetsData[tabName] ? cheatsheetsData[tabName].title : tabName;
-            trackEvent('cheatsheet_opened', {
+            setTimeout(() => trackEvent('cheatsheet_opened', {
                 tab: tabName,
                 tab_title: tabTitle,
-            });
+            }), 1000);
         } catch (err) {
             console.warn('[Analytics] Ошибка трекинга cheatsheet_opened:', err);
         }

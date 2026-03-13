@@ -77,12 +77,12 @@ function togglePrompt(promptId) {
     if (promptStates[promptId] === true && typeof trackEvent === 'function') {
         try {
             const promptData = promptsData.find(p => p.id === promptId);
-            trackEvent('prompt_viewed', {
+            setTimeout(() => trackEvent('prompt_viewed', {
                 prompt_id: promptId,
                 prompt_title: promptData ? promptData.title : '',
                 prompt_day: promptData ? promptData.day : '',
                 prompt_category: promptData ? promptData.category : '',
-            });
+            }), 1000);
         } catch (err) {
             console.warn('[Analytics] Ошибка трекинга prompt_viewed:', err);
         }
@@ -109,12 +109,12 @@ function copyPrompt(promptId) {
         // Событие: пользователь скопировал промпт
         if (typeof trackEvent === 'function') {
             try {
-                trackEvent('prompt_copied', {
+                setTimeout(() => trackEvent('prompt_copied', {
                     prompt_id: promptId,
                     prompt_title: promptData.title,
                     prompt_day: promptData.day,
                     prompt_category: promptData.category,
-                });
+                }), 1000);
             } catch (err) {
                 console.warn('[Analytics] Ошибка трекинга prompt_copied:', err);
             }
