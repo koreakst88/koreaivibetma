@@ -35,6 +35,28 @@ body.dark-theme, .dark-theme {
   --tg-link: #5288c1;
 }
 
+/* Явные стили для тёмной темы Telegram */
+.dark-theme {
+  background-color: #1a1a2e !important;
+  color: #ffffff !important;
+}
+
+.dark-theme p, 
+.dark-theme li, 
+.dark-theme h1, 
+.dark-theme h2, 
+.dark-theme h3,
+.dark-theme span {
+  color: #ffffff !important;
+}
+
+.dark-theme table,
+.dark-theme td,
+.dark-theme th {
+  color: #ffffff !important;
+  border-color: #444 !important;
+}
+
 /* 2. Базовые стили body */
 body {
   background-color: var(--tg-bg);
