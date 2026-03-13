@@ -60,12 +60,17 @@ function initAnalytics(user) {
  * @param {Object} [props={}] — дополнительные свойства события
  */
 function trackEvent(name, props) {
+    console.log('[Analytics] trackEvent вызван:', name, typeof amplitude);
     try {
-        if (typeof amplitude === 'undefined') return;
-
+        if (typeof amplitude === 'undefined') {
+            console.warn('[Analytics] amplitude undefined, пропускаем:', name);
+            return;
+        }
         const eventProps = props || {};
+        console.log('[Analytics] amplitude.track вызывается...');
         amplitude.track(name, eventProps);
+        console.log('[Analytics] Событие отправлено:', name, eventProps);
     } catch (err) {
-        // Ошибки аналитики не должны прерывать работу приложения
+        console.error('[Analytics] trackEvent ошибка:', name, err.message);
     }
 }
