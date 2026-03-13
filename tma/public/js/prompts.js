@@ -1,5 +1,16 @@
 // tma/public/js/prompts.js
 
+// Инициализация аналитики при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        const tgUser = (typeof Telegram !== 'undefined' && 
+            Telegram.WebApp?.initDataUnsafe?.user) || null;
+        if (typeof initAnalytics === 'function') {
+            initAnalytics(tgUser);
+        }
+    } catch(e) {}
+});
+
 let promptsData = [];
 
 async function loadPrompts() {

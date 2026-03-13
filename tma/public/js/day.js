@@ -1,5 +1,16 @@
 // tma/public/js/day.js
 
+// Инициализация аналитики при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        const tgUser = (typeof Telegram !== 'undefined' && 
+            Telegram.WebApp?.initDataUnsafe?.user) || null;
+        if (typeof initAnalytics === 'function') {
+            initAnalytics(tgUser);
+        }
+    } catch(e) {}
+});
+
 // 1. Основная загрузка
 async function loadDayContent() {
     // Получаем ID дня из URL
