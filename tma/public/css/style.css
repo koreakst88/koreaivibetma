@@ -332,11 +332,14 @@ body.dark-theme .markdown-content blockquote { background-color: rgba(51, 144, 2
 /* Глобальное убирание буллетов для всех списков в контенте дня */
 #day-content ul {
   list-style: none !important;
-  padding-left: 20px;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
 }
 
 #day-content ul li {
   list-style: none !important;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
 }
 
 #day-content ul li::before,
