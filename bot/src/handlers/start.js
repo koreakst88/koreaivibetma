@@ -1,8 +1,12 @@
 import { InlineKeyboard } from 'grammy';
 import { trackBotStart } from '../utils/analytics.js';
 import { trackEvent, setUserProperties } from '../utils/amplitude.js';
+import { registerUser } from '../utils/onboarding.js';
 
 export async function handleStart(ctx) {
+    // Регистрируем пользователя для onboarding серии
+    registerUser(ctx.from.id);
+
     await trackBotStart(ctx.from.id, ctx.from.username);
 
     // Amplitude tracking (asynchronous, non-blocking)

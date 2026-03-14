@@ -1,9 +1,11 @@
 import { Bot } from 'grammy';
 import dotenv from 'dotenv';
+import cron from 'node-cron';
 import { handleStart } from './handlers/start.js';
 import { handleUnlockCommand, handleUnlockCode } from './handlers/unlock.js';
 import { trackEnrollmentInterest } from './utils/analytics.js';
 import { trackEvent, setUserProperties } from './utils/amplitude.js';
+import { processOnboardingQueue } from './utils/onboarding.js';
 
 // Загрузка переменных окружения
 dotenv.config();
@@ -135,6 +137,13 @@ bot.start({
     onStart: (botInfo) => {
         console.log(`✅ Бот @${botInfo.username} успешно запущен!`);
         console.log(`📱 TMA URL: ${process.env.TMA_URL}`);
+        
+        // Запускаем cron-задачу для проверки onboarding сообщений (каждые 60 минут)
+        cron.schedule('0 * * * *', async () => {
+            console.log('[Cron] Running onboarding check...');
+            await processOnboardingQueue(bot);
+        });
+        console.log('⏰ Onboarding cron job scheduled (every 60 minutes)');
     }
 });
 
