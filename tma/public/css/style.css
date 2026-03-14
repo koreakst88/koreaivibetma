@@ -329,6 +329,22 @@ body.dark-theme .markdown-content blockquote { background-color: rgba(51, 144, 2
     gap: 10px;
 }
 
+/* Глобальное убирание буллетов для всех списков в контенте дня */
+#day-content ul {
+  list-style: none !important;
+  padding-left: 20px;
+}
+
+#day-content ul li {
+  list-style: none !important;
+}
+
+#day-content ul li::before,
+#day-content ul li::marker {
+  display: none !important;
+  content: '' !important;
+}
+
 input[type="checkbox"] {
     width: 20px;
     height: 20px;
