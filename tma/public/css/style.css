@@ -57,6 +57,23 @@ body.dark-theme, .dark-theme {
   border-color: #444 !important;
 }
 
+.dark-theme h1,
+.dark-theme h2,
+.dark-theme h3,
+.dark-theme h4,
+.dark-theme h5,
+.dark-theme h6,
+.dark-theme strong,
+.dark-theme b,
+.dark-theme #day-content h1,
+.dark-theme #day-content h2,
+.dark-theme #day-content h3,
+.dark-theme #day-content h4,
+.dark-theme #day-content strong,
+.dark-theme #day-content b {
+  color: #ffffff !important;
+}
+
 /* 2. Базовые стили body */
 body {
   background-color: var(--tg-bg);
