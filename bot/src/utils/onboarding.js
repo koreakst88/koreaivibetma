@@ -8,7 +8,9 @@ import { InlineKeyboard } from 'grammy';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const USERS_FILE = path.join(__dirname, '../../data/users.json');
+const USERS_FILE = process.env.DATA_PATH
+    ? path.join(process.env.DATA_PATH, 'users.json')
+    : path.join(process.cwd(), 'data', 'users.json');
 
 // Время задержки для сообщений (в миллисекундах)
 const MSG1_DELAY = 24 * 60 * 60 * 1000; // 24 часа
