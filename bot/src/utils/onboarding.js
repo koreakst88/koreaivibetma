@@ -1,52 +1,39 @@
 // bot/src/utils/onboarding.js
 // Onboarding серия сообщений для новых пользователей
 
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { Pool } from 'pg';
 import { InlineKeyboard } from 'grammy';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const USERS_FILE = process.env.DATA_PATH
-    ? path.join(process.env.DATA_PATH, 'users.json')
-    : path.join(process.cwd(), 'data', 'users.json');
+// PostgreSQL pool connection
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+});
 
 // Время задержки для сообщений (в миллисекундах)
 const MSG1_DELAY = 24 * 60 * 60 * 1000; // 24 часа
 const MSG2_DELAY = 48 * 60 * 60 * 1000; // 48 часа
 
 /**
- * Загрузить данные пользователей из файла
- * @returns {Object} Объект с данными пользователей
+ * Инициализировать таблицу пользователей
  */
-function loadUsers() {
+export async function initOnboardingTable() {
+    const client = await pool.connect();
     try {
-        if (!fs.existsSync(USERS_FILE)) {
-            fs.writeFileSync(USERS_FILE, '{}', 'utf8');
-            return {};
-        }
-        const data = fs.readFileSync(USERS_FILE, 'utf8');
-        return JSON.parse(data || '{}');
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS onboarding_users (
+                user_id BIGINT PRIMARY KEY,
+                started_at TIMESTAMP DEFAULT NOW(),
+                msg1_sent BOOLEAN DEFAULT FALSE,
+                msg2_sent BOOLEAN DEFAULT FALSE
+            )
+        `);
+        console.log('[Onboarding] Table initialized successfully');
     } catch (error) {
-        console.error('[Onboarding] Error loading users:', error);
-        return {};
-    }
-}
-
-/**
- * Сохранить данные пользователей в файл
- * @param {Object} users - Объект с данными пользователей
- */
-function saveUsers(users) {
-    try {
-        const dir = path.dirname(USERS_FILE);
-        if (!fs.existsSync(dir)) {
-            fs.mkdirSync(dir, { recursive: true });
-        }
-        fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), 'utf8');
-    } catch (error) {
-        console.error('[Onboarding] Error saving users:', error);
+        console.error('[Onboarding] Error initializing table:', error);
+        throw error;
+    } finally {
+        client.release();
     }
 }
 
@@ -54,33 +41,39 @@ function saveUsers(users) {
  * Зарегистрировать пользователя (вызывается при каждом /start)
  * @param {string} userId - ID пользователя в Telegram
  */
-export function registerUser(userId) {
-    const users = loadUsers();
-    const now = Date.now();
+export async function registerUser(userId) {
+    const client = await pool.connect();
+    try {
+        // Проверяем существует ли пользователь
+        const existingUser = await client.query(
+            'SELECT user_id, started_at, msg1_sent, msg2_sent FROM onboarding_users WHERE user_id = $1',
+            [userId]
+        );
 
-    if (!users[userId]) {
-        // Новый пользователь
-        users[userId] = {
-            startedAt: now,
-            onboarding: {
-                msg1: false,
-                msg2: false
+        if (existingUser.rows.length === 0) {
+            // Новый пользователь
+            await client.query(
+                'INSERT INTO onboarding_users (user_id, started_at, msg1_sent, msg2_sent) VALUES ($1, NOW(), FALSE, FALSE)',
+                [userId]
+            );
+            console.log(`[Onboarding] Registered new user: ${userId}`);
+        } else {
+            // Проверяем нужно ли сбросить onboarding (7+ дней)
+            const user = existingUser.rows[0];
+            const timeSinceStart = Date.now() - new Date(user.started_at).getTime();
+
+            if (timeSinceStart > 7 * 24 * 60 * 60 * 1000) {
+                await client.query(
+                    'UPDATE onboarding_users SET started_at = NOW(), msg1_sent = FALSE, msg2_sent = FALSE WHERE user_id = $1',
+                    [userId]
+                );
+                console.log(`[Onboarding] Reset onboarding for returning user: ${userId}`);
             }
-        };
-        saveUsers(users);
-        console.log(`[Onboarding] Registered new user: ${userId}`);
-    } else {
-        // Обновляем startedAt если пользователь вернулся после долгого времени
-        const user = users[userId];
-        const timeSinceStart = now - user.startedAt;
-        
-        // Если пользователь вернулся через 7+ дней, сбрасываем onboarding
-        if (timeSinceStart > 7 * 24 * 60 * 60 * 1000) {
-            user.startedAt = now;
-            user.onboarding = { msg1: false, msg2: false };
-            saveUsers(users);
-            console.log(`[Onboarding] Reset onboarding for returning user: ${userId}`);
         }
+    } catch (error) {
+        console.error('[Onboarding] Error registering user:', error);
+    } finally {
+        client.release();
     }
 }
 
@@ -88,27 +81,39 @@ export function registerUser(userId) {
  * Получить список пользователей, которым нужно отправить сообщения
  * @returns {Array} Массив объектов { userId, msg1?, msg2? }
  */
-export function getPendingMessages() {
-    const users = loadUsers();
-    const now = Date.now();
-    const pending = [];
+export async function getPendingMessages() {
+    const client = await pool.connect();
+    try {
+        const now = new Date();
+        const msg1Threshold = new Date(now.getTime() - MSG1_DELAY);
+        const msg2Threshold = new Date(now.getTime() - MSG2_DELAY);
 
-    for (const [userId, userData] of Object.entries(users)) {
-        const { startedAt, onboarding } = userData;
-        const timeSinceStart = now - startedAt;
+        const result = await client.query(`
+            SELECT user_id, msg1_sent, msg2_sent, started_at
+            FROM onboarding_users
+            WHERE (msg1_sent = FALSE AND started_at <= $1)
+               OR (msg2_sent = FALSE AND started_at <= $2)
+        `, [msg1Threshold, msg2Threshold]);
 
-        // Проверяем сообщение 1 (24 часа)
-        if (!onboarding.msg1 && timeSinceStart >= MSG1_DELAY) {
-            pending.push({ userId, msg1: true });
+        const pending = [];
+        for (const row of result.rows) {
+            const timeSinceStart = now - new Date(row.started_at).getTime();
+
+            if (!row.msg1_sent && timeSinceStart >= MSG1_DELAY) {
+                pending.push({ userId: row.user_id, msg1: true });
+            }
+            if (!row.msg2_sent && timeSinceStart >= MSG2_DELAY) {
+                pending.push({ userId: row.user_id, msg2: true });
+            }
         }
 
-        // Проверяем сообщение 2 (48 часов)
-        if (!onboarding.msg2 && timeSinceStart >= MSG2_DELAY) {
-            pending.push({ userId, msg2: true });
-        }
+        return pending;
+    } catch (error) {
+        console.error('[Onboarding] Error getting pending messages:', error);
+        return [];
+    } finally {
+        client.release();
     }
-
-    return pending;
 }
 
 /**
@@ -116,13 +121,19 @@ export function getPendingMessages() {
  * @param {string} userId - ID пользователя
  * @param {string} messageType - 'msg1' или 'msg2'
  */
-export function markMessageSent(userId, messageType) {
-    const users = loadUsers();
-    
-    if (users[userId]) {
-        users[userId].onboarding[messageType] = true;
-        saveUsers(users);
+export async function markMessageSent(userId, messageType) {
+    const client = await pool.connect();
+    try {
+        const column = messageType === 'msg1' ? 'msg1_sent' : 'msg2_sent';
+        await client.query(
+            `UPDATE onboarding_users SET ${column} = TRUE WHERE user_id = $1`,
+            [userId]
+        );
         console.log(`[Onboarding] Marked ${messageType} as sent for user: ${userId}`);
+    } catch (error) {
+        console.error('[Onboarding] Error marking message as sent:', error);
+    } finally {
+        client.release();
     }
 }
 
@@ -153,11 +164,11 @@ export function getMessage2Keyboard() {
 export function getMessage1Text() {
     return `Добрый день 👋
 
-Надеюсь материалы курса оказались полезными. Если пробовали 
-настройки из Дня 0 или работали с промптами — буду рад услышать 
+Надеюсь материалы курса оказались полезными. Если пробовали
+настройки из Дня 0 или работали с промптами — буду рад услышать
 как прошло.
 
-Если возникли вопросы или появились идеи для своего проекта — 
+Если возникли вопросы или появились идеи для своего проекта —
 пишите напрямую, разберёмся вместе 🙌`;
 }
 
@@ -166,7 +177,7 @@ export function getMessage1Text() {
  * @returns {string}
  */
 export function getMessage2Text() {
-    return `Хочу показать вам несколько проектов которые были созданы 
+    return `Хочу показать вам несколько проектов которые были созданы
 с помощью ИИ — реальные работы, не концепты.
 
 Посмотрите сами 👇`;
@@ -197,7 +208,7 @@ export async function sendOnboardingMessage(bot, userId, messageType) {
             reply_markup: keyboard
         });
 
-        markMessageSent(userId, messageType);
+        await markMessageSent(userId, messageType);
         console.log(`[Onboarding] Sent ${messageType} to user: ${userId}`);
         return true;
     } catch (error) {
@@ -207,7 +218,7 @@ export async function sendOnboardingMessage(bot, userId, messageType) {
             error.description?.includes('chat not found')) {
             console.log(`[Onboarding] User ${userId} blocked bot or is deactivated, skipping...`);
             // Помечаем как отправленное чтобы не пытаться снова
-            markMessageSent(userId, messageType);
+            await markMessageSent(userId, messageType);
         } else {
             console.error(`[Onboarding] Error sending ${messageType} to user ${userId}:`, error.message);
         }
@@ -221,9 +232,9 @@ export async function sendOnboardingMessage(bot, userId, messageType) {
  */
 export async function processOnboardingQueue(bot) {
     console.log('[Onboarding] Checking for pending messages...');
-    
-    const pending = getPendingMessages();
-    
+
+    const pending = await getPendingMessages();
+
     if (pending.length === 0) {
         console.log('[Onboarding] No pending messages');
         return;
@@ -241,4 +252,12 @@ export async function processOnboardingQueue(bot) {
     }
 
     console.log('[Onboarding] Queue processing complete');
+}
+
+/**
+ * Закрыть соединение с базой данных (при остановке бота)
+ */
+export async function closeOnboardingPool() {
+    await pool.end();
+    console.log('[Onboarding] Database connection closed');
 }

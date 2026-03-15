@@ -13,7 +13,8 @@
     "grammy": "^1.19.2",
     "marked": "^17.0.4",
     "node-cron": "^4.2.1",
-    "node-fetch": "^2.7.0"
+    "node-fetch": "^2.7.0",
+    "pg": "^8.20.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

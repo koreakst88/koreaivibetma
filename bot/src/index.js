@@ -5,7 +5,7 @@ import { handleStart } from './handlers/start.js';
 import { handleUnlockCommand, handleUnlockCode } from './handlers/unlock.js';
 import { trackEnrollmentInterest } from './utils/analytics.js';
 import { trackEvent, setUserProperties } from './utils/amplitude.js';
-import { processOnboardingQueue } from './utils/onboarding.js';
+import { initOnboardingTable, processOnboardingQueue, closeOnboardingPool } from './utils/onboarding.js';
 
 // Загрузка переменных окружения
 dotenv.config();
@@ -18,6 +18,11 @@ if (!process.env.BOT_TOKEN) {
 
 if (!process.env.TMA_URL) {
     console.error('❌ Ошибка: TMA_URL не найден в .env файле');
+    process.exit(1);
+}
+
+if (!process.env.DATABASE_URL) {
+    console.error('❌ Ошибка: DATABASE_URL не найден в .env файле');
     process.exit(1);
 }
 
@@ -134,10 +139,14 @@ bot.catch((err) => {
 // Запуск бота
 console.log('🤖 Запуск бота...');
 bot.start({
-    onStart: (botInfo) => {
+    onStart: async (botInfo) => {
         console.log(`✅ Бот @${botInfo.username} успешно запущен!`);
         console.log(`📱 TMA URL: ${process.env.TMA_URL}`);
-        
+
+        // Инициализация таблицы onboarding
+        await initOnboardingTable();
+        console.log('📊 Onboarding таблица инициализирована');
+
         // Запускаем cron-задачу для проверки onboarding сообщений (каждые 60 минут)
         cron.schedule('0 * * * *', async () => {
             console.log('[Cron] Running onboarding check...');
@@ -148,12 +157,14 @@ bot.start({
 });
 
 // Graceful shutdown
-process.once('SIGINT', () => {
+process.once('SIGINT', async () => {
     console.log('\n⏹ Остановка бота...');
+    await closeOnboardingPool();
     bot.stop();
 });
 
-process.once('SIGTERM', () => {
+process.once('SIGTERM', async () => {
     console.log('\n⏹ Остановка бота...');
+    await closeOnboardingPool();
     bot.stop();
 });
