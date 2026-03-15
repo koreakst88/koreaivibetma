@@ -5,6 +5,9 @@ import { Pool } from 'pg';
 import { InlineKeyboard } from 'grammy';
 
 // PostgreSQL pool connection
+const dbUrl = process.env.DATABASE_URL;
+console.log('[DB] Connecting to:', dbUrl ? dbUrl.replace(/:\/\/.*@/, '://***@') : 'NOT SET');
+
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
