@@ -22,6 +22,15 @@ function initAnalytics(user) {
                     autocapture: false
                 });
                 _amplitudeInitialized = true;
+
+                // Session Replay
+                if (typeof sessionReplay !== 'undefined') {
+                    const sessionReplayPlugin = sessionReplay.plugin({
+                        sampleRate: 1 // записывать 100% сессий
+                    });
+                    amplitude.add(sessionReplayPlugin);
+                    console.log('[Analytics] Session Replay подключён');
+                }
             }
 
             if (user && user.id) {
