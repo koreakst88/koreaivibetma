@@ -181,7 +181,116 @@ function promptUnlockCode(dayId) {
     }
 }
 
-// 6. Инициализация
+// 6. Заполнение данных пользователя в хедере и профиле
+function initializeUserProfile() {
+    const tgUser = (typeof Telegram !== 'undefined' &&
+        Telegram.WebApp?.initDataUnsafe?.user) || null;
+
+    const displayName = tgUser?.first_name?.trim() || 'друг';
+    const initialSource = tgUser?.first_name || tgUser?.username || 'В';
+    const initial = initialSource.charAt(0).toUpperCase();
+    const avatarUrl = tgUser?.photo_url || '';
+
+    const userName = document.getElementById('user-name');
+    if (userName) {
+        userName.textContent = displayName;
+    }
+
+    document.querySelectorAll('.user-avatar-shell').forEach(shell => {
+        const image = shell.querySelector('.user-avatar-image');
+        const fallback = shell.querySelector('.user-avatar-fallback');
+
+        if (fallback) {
+            fallback.textContent = initial;
+        }
+
+        if (image) {
+            if (avatarUrl) {
+                image.setAttribute('src', avatarUrl);
+            } else {
+                image.removeAttribute('src');
+            }
+        }
+    });
+}
+
+// 7. Переключение экранов через нижний таббар
+function showAppSection(sectionId, activeTabId) {
+    const sectionIds = ['home-section', 'about-section', 'course-section', 'guides-section', 'profile-section'];
+    const isAboutSection = sectionId === 'about-section';
+    const tabBar = document.querySelector('.tab-bar');
+    const appHeader = document.querySelector('.app-header');
+
+    sectionIds.forEach(id => {
+        const section = document.getElementById(id);
+        if (!section) return;
+
+        section.style.display = id === sectionId ? '' : 'none';
+    });
+
+    document.querySelectorAll('.tab-bar__item').forEach(tab => {
+        tab.classList.toggle('is-active', tab.id === activeTabId);
+    });
+
+    if (tabBar) {
+        tabBar.style.display = isAboutSection ? 'none' : '';
+    }
+
+    if (appHeader) {
+        appHeader.style.display = isAboutSection ? 'none' : '';
+    }
+
+    document.body.classList.toggle('about-open', isAboutSection);
+
+    window.scrollTo({ top: 0, behavior: 'auto' });
+}
+
+function setupTabNavigation() {
+    const tabBindings = [
+        ['tab-home', 'home-section'],
+        ['tab-course', 'course-section'],
+        ['tab-guides', 'guides-section'],
+        ['tab-profile', 'profile-section']
+    ];
+
+    tabBindings.forEach(([tabId, sectionId]) => {
+        const tab = document.getElementById(tabId);
+        if (!tab) return;
+
+        tab.addEventListener('click', (event) => {
+            event.preventDefault();
+            showAppSection(sectionId, tabId);
+        });
+    });
+
+    const quickActions = [
+        ['btn-about', 'about-section', null],
+        ['card-quiz', 'guides-section', 'tab-guides'],
+        ['card-continue', 'course-section', 'tab-course'],
+        ['profile-progress-link', 'course-section', 'tab-course']
+    ];
+
+    quickActions.forEach(([triggerId, sectionId, tabId]) => {
+        const trigger = document.getElementById(triggerId);
+        if (!trigger) return;
+
+        trigger.addEventListener('click', (event) => {
+            event.preventDefault();
+            showAppSection(sectionId, tabId);
+        });
+    });
+
+    const aboutBack = document.getElementById('about-back');
+    if (aboutBack) {
+        aboutBack.addEventListener('click', () => {
+            showAppSection('home-section', 'tab-home');
+        });
+    }
+
+    showAppSection('home-section', 'tab-home');
+}
+
+// 8. Инициализация
 document.addEventListener('DOMContentLoaded', () => {
     // Предотвращаем сворачивание при скроллинге
     if (window.Telegram && window.Telegram.WebApp) {
@@ -204,6 +313,9 @@ document.addEventListener('DOMContentLoaded', () => {
             initAnalytics(tgUser);
         }
     } catch(e) {}
+
+    initializeUserProfile();
+    setupTabNavigation();
 
     // В случае если DAYS_CONFIG загрузился до app.js
     if (typeof DAYS_CONFIG !== 'undefined') {

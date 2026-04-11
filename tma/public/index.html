@@ -21,56 +21,283 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 
-<body class="bg-gray-50 text-gray-900 font-sans">
+<body class="index-page bg-gray-50 text-gray-900 font-sans">
 
     <div id="app-container">
-        <div class="container max-w-4xl mx-auto p-4">
+        <header class="app-header">
+            <div class="app-header__inner">
+                <div class="app-header__copy">
+                    <p class="app-header__eyebrow text-secondary">Vibe Coding Course</p>
+                    <h2 class="app-header__title">Привет, <span id="user-name">...</span>!</h2>
+                </div>
 
-        <!-- Header -->
-        <header class="mb-8">
-            <h1 class="text-3xl font-bold mb-6">Как создавать цифровые проекты с помощью ИИ</h1>
-            <div class="bg-white rounded-lg shadow p-4">
-                <div id="progress-text" class="text-lg font-semibold mb-2">Прогресс: 0/7</div>
-                <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
-                    <div id="progress-fill" class="bg-blue-500 h-4 rounded-full transition-all duration-500"
-                        style="width: 0%"></div>
+                <div class="user-avatar-shell" aria-label="Профиль пользователя">
+                    <img id="user-avatar" class="user-avatar-image" alt="Аватар пользователя">
+                    <div class="user-avatar-fallback">В</div>
                 </div>
             </div>
         </header>
 
-        <!-- Секция "Всегда доступно" -->
-        <section class="mb-8">
-            <h2 class="text-2xl font-bold mb-4">📚 Всегда доступно</h2>
-            <!-- Адаптивная сетка для карточек -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <a href="prompts.html" class="block bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow">
-                    <h3 class="text-xl font-bold text-blue-600 mb-2">Библиотека промптов</h3>
-                    <p class="text-gray-600">14+ готовых промптов</p>
+        <main class="main-content">
+            <section id="home-section" class="home-section">
+                <div class="hero-section card">
+                    <div class="hero-badge">
+                        <span class="hero-badge__icon">🎓</span>
+                        <span class="hero-badge__text">Первый урок бесплатно</span>
+                    </div>
+                    <h1>Научись создавать приложения с помощью ИИ</h1>
+                    <p class="hero-subtitle">7 индивидуальных занятий. Без опыта программирования.</p>
+
+                    <div class="hero-actions">
+                        <a id="btn-start-lesson" class="btn-primary" href="day.html?id=day-0">Начать урок</a>
+                        <a id="btn-about" class="btn-secondary" href="#course-section">О курсе</a>
+                    </div>
+                </div>
+
+                <div class="action-grid" aria-label="Быстрые действия">
+                    <a id="card-quiz" class="action-card card" href="#guides-section">
+                        <div class="action-card__icon-wrap">
+                            <div class="action-card__icon">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="8"></circle>
+                                    <circle cx="12" cy="12" r="4"></circle>
+                                    <circle cx="12" cy="12" r="1.75" class="action-card__icon-fill"></circle>
+                                    <path d="M15 9l5-5"></path>
+                                    <path d="M16 4h4v4"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="action-card__copy">
+                            <h3>Подойдёт ли вам этот формат</h3>
+                            <p class="text-secondary">Ответьте на несколько вопросов</p>
+                        </div>
+                        <div class="action-card__arrow">→</div>
+                    </a>
+
+                    <a id="card-continue" class="action-card card" href="#course-section">
+                        <div class="action-card__icon-wrap">
+                            <div class="action-card__icon">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M5 6.5A2.5 2.5 0 0 1 7.5 4H19v13H7.5A2.5 2.5 0 0 0 5 19.5z"></path>
+                                    <path d="M5 6.5v13"></path>
+                                    <path d="M8 8h7"></path>
+                                    <path d="M8 11h5"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="action-card__copy">
+                            <h3>Продолжить обучение</h3>
+                            <p class="text-secondary">Перейти к вашему текущему дню</p>
+                        </div>
+                        <div class="action-card__arrow">→</div>
+                    </a>
+                </div>
+            </section>
+
+            <section id="about-section" class="about-section" style="display:none">
+                <div class="about-header">
+                    <button id="about-back" class="about-back" type="button">← Назад</button>
+                    <h2 class="about-header__title">О курсе</h2>
+                    <div class="about-header__spacer" aria-hidden="true"></div>
+                </div>
+
+                <div id="video-placeholder" class="video-placeholder">
+                    <div class="video-placeholder__play">▶</div>
+                    <div class="video-placeholder__text">Видео с автором курса</div>
+                </div>
+
+                <div class="about-block card">
+                    <h3>Что такое Vibe Coding Course</h3>
+                    <p>7 индивидуальных занятий 1-на-1 по 60-90 минут.</p>
+                    <p>Без опыта программирования.</p>
+                    <p>Цель — создать первое Telegram Mini App и добавить его в портфолио.</p>
+                </div>
+
+                <div class="about-block">
+                    <h3>Как проходит обучение</h3>
+                    <div class="how-cards">
+                        <div class="how-card card">
+                            <div class="how-card__icon">01</div>
+                            <div class="how-card__copy">
+                                <h4>Пошагово</h4>
+                                <p class="text-secondary">Каждое занятие строится на предыдущем</p>
+                            </div>
+                        </div>
+
+                        <div class="how-card card">
+                            <div class="how-card__icon">02</div>
+                            <div class="how-card__copy">
+                                <h4>С практикой</h4>
+                                <p class="text-secondary">Вы создаёте реальный проект, не просто смотрите</p>
+                            </div>
+                        </div>
+
+                        <div class="how-card card">
+                            <div class="how-card__icon">03</div>
+                            <div class="how-card__copy">
+                                <h4>С поддержкой</h4>
+                                <p class="text-secondary">Преподаватель на связи между занятиями</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="about-block">
+                    <h3>Проекты и кейсы</h3>
+                    <p class="text-secondary">Смотрите реальные работы</p>
+                    <div class="social-row">
+                        <a class="social-pill" href="https://tiktok.com/@koreakim88" target="_blank" rel="noopener noreferrer">
+                            <span class="social-pill__icon">♪</span>
+                            <span class="social-pill__label">TikTok</span>
+                        </a>
+                        <a class="social-pill" href="https://instagram.com/koredigital88" target="_blank" rel="noopener noreferrer">
+                            <span class="social-pill__icon">◎</span>
+                            <span class="social-pill__label">Instagram</span>
+                        </a>
+                        <a class="social-pill" href="https://t.me/koredigital88" target="_blank" rel="noopener noreferrer">
+                            <span class="social-pill__icon">✈</span>
+                            <span class="social-pill__label">Telegram</span>
+                        </a>
+                    </div>
+                </div>
+
+                <a class="btn-secondary about-contact-button" href="https://t.me/koreakim88" target="_blank" rel="noopener noreferrer">
+                    Связаться со мной
                 </a>
-                <a href="cheatsheets.html"
-                    class="block bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow">
-                    <h3 class="text-xl font-bold text-blue-600 mb-2">Шпаргалки</h3>
-                    <p class="text-gray-600">Команды, горячие клавиши</p>
-                </a>
-            </div>
-        </section>
 
-        <!-- Секция "Материалы по дням" -->
-        <section class="mb-8">
-            <h2 class="text-2xl font-bold mb-4">📅 Материалы по дням</h2>
-            <!-- Пустой контейнер -->
-            <div id="days-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-        </section>
+                <div class="sticky-cta">
+                    <a class="btn-primary sticky-cta__button" href="day.html?id=day-0">Начать урок</a>
+                </div>
+            </section>
 
-        <!-- Footer -->
-        <footer class="text-center mt-12 mb-8">
-            <button onclick="contactTeacher()"
-                class="bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors w-full sm:w-auto">
-                💬 Написать преподавателю
-            </button>
-        </footer>
+            <section id="course-section" class="content-section" style="display:none">
+                <div class="section-heading">
+                    <p class="section-kicker">О курсе</p>
+                    <h2>Как проходит обучение</h2>
+                    <p class="text-secondary">Изучайте материалы по дням, открывайте уроки по мере продвижения и возвращайтесь к ним в удобное время.</p>
+                </div>
 
-        </div>
+                <div class="about-card card">
+                    <h3>Что вас ждёт</h3>
+                    <p class="text-secondary">7 индивидуальных занятий, практика на реальном Telegram Mini App и поддержка преподавателя на каждом этапе.</p>
+                    <button onclick="contactTeacher()" class="btn-primary about-card__button">
+                        Написать преподавателю
+                    </button>
+                </div>
+
+                <div id="days-section" class="course-days">
+                    <div class="section-heading">
+                        <p class="section-kicker">Доступ</p>
+                        <h2>Материалы по дням</h2>
+                    </div>
+                    <div id="days-container" class="course-days-grid"></div>
+                </div>
+            </section>
+
+            <section id="guides-section" class="content-section" style="display:none">
+                <div class="section-heading">
+                    <p class="section-kicker">Гайды</p>
+                    <h2>Всегда под рукой</h2>
+                    <p class="text-secondary">Полезные материалы, которые можно открыть в любой момент.</p>
+                </div>
+
+                <div class="resource-grid">
+                    <a href="prompts.html" class="resource-card card">
+                        <div class="resource-card__icon">🧠</div>
+                        <div>
+                            <h3>Библиотека промптов</h3>
+                            <p class="text-secondary">14+ готовых промптов для быстрых стартов.</p>
+                        </div>
+                    </a>
+
+                    <a href="cheatsheets.html" class="resource-card card">
+                        <div class="resource-card__icon">📋</div>
+                        <div>
+                            <h3>Шпаргалки</h3>
+                            <p class="text-secondary">Команды, горячие клавиши и рабочие подсказки.</p>
+                        </div>
+                    </a>
+                </div>
+            </section>
+
+            <section id="profile-section" class="content-section" style="display:none">
+                <div class="section-heading">
+                    <p class="section-kicker">Профиль</p>
+                    <h2>Ваш прогресс</h2>
+                    <p class="text-secondary">Отслеживайте, сколько дней уже пройдено, и возвращайтесь к обучению в удобном темпе.</p>
+                </div>
+
+                <section class="progress-card card" aria-labelledby="progress-text">
+                    <div class="progress-card__header">
+                        <div>
+                            <p class="progress-card__label text-secondary">Ваш прогресс</p>
+                            <div id="progress-text" class="progress-card__value">0/7 дней пройдено</div>
+                        </div>
+                        <a id="profile-progress-link" class="progress-card__link" href="#course-section">К материалам</a>
+                    </div>
+                    <div class="progress-track">
+                        <div id="progress-fill" class="progress-indicator"></div>
+                    </div>
+                </section>
+
+                <div class="profile-card card">
+                    <div class="profile-card__top">
+                        <div class="user-avatar-shell user-avatar-shell--large" aria-hidden="true">
+                            <img class="user-avatar-image" alt="Аватар пользователя">
+                            <div class="user-avatar-fallback">В</div>
+                        </div>
+
+                        <div class="profile-card__copy">
+                            <h3>Ваш учебный маршрут</h3>
+                            <p class="text-secondary">Все материалы и прогресс сохраняются внутри Mini App.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <nav class="tab-bar" aria-label="Основная навигация">
+            <a id="tab-home" class="tab-bar__item is-active" href="#home-section" aria-current="page">
+                <span class="tab-bar__icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M3 10.5L12 3l9 7.5"></path>
+                        <path d="M5.5 9.5V20h13V9.5"></path>
+                    </svg>
+                </span>
+                <span class="tab-bar__label">Главная</span>
+            </a>
+            <a id="tab-course" class="tab-bar__item" href="#course-section">
+                <span class="tab-bar__icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H20v14H6.5A2.5 2.5 0 0 0 4 20.5z"></path>
+                        <path d="M4 6.5v14"></path>
+                        <path d="M8 8h7"></path>
+                        <path d="M8 11h5"></path>
+                    </svg>
+                </span>
+                <span class="tab-bar__label">Курс</span>
+            </a>
+            <a id="tab-guides" class="tab-bar__item" href="#guides-section">
+                <span class="tab-bar__icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <rect x="6" y="4" width="12" height="16" rx="2"></rect>
+                        <path d="M9 4.5h6"></path>
+                        <path d="M9 10h6"></path>
+                        <path d="M9 14h6"></path>
+                    </svg>
+                </span>
+                <span class="tab-bar__label">Гайды</span>
+            </a>
+            <a id="tab-profile" class="tab-bar__item" href="#profile-section">
+                <span class="tab-bar__icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="12" cy="8" r="3.5"></circle>
+                        <path d="M5 19a7 7 0 0 1 14 0"></path>
+                    </svg>
+                </span>
+                <span class="tab-bar__label">Профиль</span>
+            </a>
+        </nav>
     </div>
 
     <!-- Local JS -->
