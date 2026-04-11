@@ -9,6 +9,9 @@
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -170,6 +173,33 @@
                 </div>
             </section>
 
+            <section id="quiz-section" class="quiz-section" style="display:none">
+                <div class="quiz-header">
+                    <button id="quiz-back" class="quiz-back native-back-button" type="button">← Назад</button>
+                    <h2 class="quiz-header__title">Подойдёт ли вам этот формат</h2>
+                    <div class="quiz-header__spacer" aria-hidden="true"></div>
+                </div>
+
+                <div class="quiz-progress">
+                    <p id="quiz-progress-text" class="quiz-progress__text">Вопрос 1 из 5</p>
+                    <div class="quiz-progress-track">
+                        <div id="quiz-progress-bar" class="quiz-progress-bar" style="width: 20%"></div>
+                    </div>
+                </div>
+
+                <div id="quiz-question-screen" class="quiz-question card">
+                    <h2 id="quiz-question-title">Загрузка вопроса...</h2>
+                    <div id="quiz-options" class="quiz-options"></div>
+
+                    <div class="quiz-navigation">
+                        <button id="quiz-prev" class="btn-secondary" type="button">Назад</button>
+                        <button id="quiz-next" class="btn-primary" type="button" disabled>Далее</button>
+                    </div>
+                </div>
+
+                <div id="quiz-result" class="quiz-result card" style="display:none"></div>
+            </section>
+
             <section id="course-section" class="content-section" style="display:none">
                 <div class="course-section__header">
                     <h2>Курс</h2>
@@ -201,26 +231,28 @@
             <section id="guides-section" class="content-section" style="display:none">
                 <div class="section-heading">
                     <p class="section-kicker">Гайды</p>
-                    <h2>Всегда под рукой</h2>
-                    <p class="text-secondary">Полезные материалы, которые можно открыть в любой момент.</p>
+                    <h2>Гайды</h2>
+                    <p class="text-secondary">Полезные материалы всегда под рукой</p>
                 </div>
 
-                <div class="resource-grid">
-                    <a href="prompts.html" class="resource-card card">
-                        <div class="resource-card__icon">🧠</div>
-                        <div>
-                            <h3>Библиотека промптов</h3>
-                            <p class="text-secondary">14+ готовых промптов для быстрых стартов.</p>
-                        </div>
-                    </a>
+                <div class="guides-tabs" role="tablist" aria-label="Разделы гайдов">
+                    <button id="guide-tab-prompts" class="guide-tab active" type="button" data-tab="prompts">Промпты</button>
+                    <button id="guide-tab-cheatsheets" class="guide-tab" type="button" data-tab="cheatsheets">Шпаргалки</button>
+                    <button id="guide-tab-links" class="guide-tab" type="button" data-tab="links">Ссылки</button>
+                </div>
 
-                    <a href="cheatsheets.html" class="resource-card card">
-                        <div class="resource-card__icon">📋</div>
-                        <div>
-                            <h3>Шпаргалки</h3>
-                            <p class="text-secondary">Команды, горячие клавиши и рабочие подсказки.</p>
-                        </div>
-                    </a>
+                <div id="guides-panel-prompts" class="guides-panel">
+                    <div id="prompt-filters" class="guides-tabs guides-tabs--filters" aria-label="Категории промптов"></div>
+                    <div id="guides-prompts-list" class="guides-stack"></div>
+                </div>
+
+                <div id="guides-panel-cheatsheets" class="guides-panel" style="display:none">
+                    <div id="cheatsheet-filters" class="guides-tabs guides-tabs--filters" aria-label="Категории шпаргалок"></div>
+                    <div id="guides-cheatsheets-list" class="guides-stack"></div>
+                </div>
+
+                <div id="guides-panel-links" class="guides-panel" style="display:none">
+                    <div id="guides-links-list" class="guides-stack"></div>
                 </div>
             </section>
 
@@ -295,6 +327,9 @@
     <script src="js/progress.js"></script>
     <script src="js/access.js"></script>
     <script src="js/telegram.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/quiz.js"></script>
+    <script src="js/guides.js"></script>
     <script src="js/app.js"></script>
 
 </body>

@@ -1,6 +1,6 @@
 /**
  * Модуль контроля доступа для Telegram Mini App
- * Управляет разблокировкой дней курса через коды доступа
+ * Управляет разблокировкой дней курса через Supabase с fallback на LocalStorage
  */
 
 // Конфигурация дней курса
@@ -30,79 +30,45 @@ const UNLOCK_CODES = {
 // Публичные дни (доступны всем без кода)
 const PUBLIC_DAYS = ['day-0'];
 
-// Ключ для хранения в LocalStorage
+// Ключ для хранения fallback-доступа в LocalStorage
 const STORAGE_KEY = 'tma_unlocked_days';
 
-/**
- * Получить список разблокированных дней из LocalStorage
- * @returns {string[]} Массив ID разблокированных дней
- */
+function getTelegramUserId() {
+    return (
+        window.currentTelegramUserId ||
+        window.Telegram?.WebApp?.initDataUnsafe?.user?.id ||
+        null
+    );
+}
+
 function getUnlockedDays() {
     try {
         const stored = localStorage.getItem(STORAGE_KEY);
-        
+
         if (!stored) {
             return [];
         }
 
         const parsed = JSON.parse(stored);
-        
-        // Валидация: должен быть массив
         if (!Array.isArray(parsed)) {
-            console.warn('Invalid unlocked days format in storage, resetting');
             localStorage.removeItem(STORAGE_KEY);
             return [];
         }
 
-        // Валидация: все элементы должны быть строками и существовать в конфиге
-        const validated = parsed.filter(dayId => {
-            if (typeof dayId !== 'string') {
-                console.warn(`Invalid day ID type: ${typeof dayId}`);
-                return false;
-            }
-            if (!DAYS_CONFIG[dayId]) {
-                console.warn(`Unknown day ID in storage: ${dayId}`);
-                return false;
-            }
-            return true;
-        });
-
-        return validated;
+        return parsed.filter(dayId => typeof dayId === 'string' && Boolean(DAYS_CONFIG[dayId]));
     } catch (error) {
         console.error('Error reading unlocked days from storage:', error);
         return [];
     }
 }
 
-/**
- * Сохранить список разблокированных дней в LocalStorage
- * @param {string[]} days - Массив ID дней для сохранения
- * @returns {boolean} Успешность операции
- */
 function saveUnlockedDays(days) {
     try {
-        // Валидация входных данных
         if (!Array.isArray(days)) {
-            console.error('saveUnlockedDays: days must be an array');
             return false;
         }
 
-        // Фильтрация и валидация
-        const validated = days.filter(dayId => {
-            if (typeof dayId !== 'string') {
-                console.warn(`Skipping invalid day ID type: ${typeof dayId}`);
-                return false;
-            }
-            if (!DAYS_CONFIG[dayId]) {
-                console.warn(`Skipping unknown day ID: ${dayId}`);
-                return false;
-            }
-            return true;
-        });
-
-        // Удаление дубликатов
-        const unique = [...new Set(validated)];
-
+        const unique = [...new Set(days.filter(dayId => typeof dayId === 'string' && Boolean(DAYS_CONFIG[dayId])))];
         localStorage.setItem(STORAGE_KEY, JSON.stringify(unique));
         return true;
     } catch (error) {
@@ -111,41 +77,83 @@ function saveUnlockedDays(days) {
     }
 }
 
-/**
- * Проверить, заблокирован ли день
- * @param {string} dayId - ID дня для проверки
- * @returns {boolean} true если день заблокирован, false если доступен
- */
-function isDayLocked(dayId) {
+function getFallbackAccessState() {
+    const unlockedDays = getUnlockedDays();
+    const maxDay = unlockedDays.reduce((currentMax, dayId) => {
+        return Math.max(currentMax, DAYS_CONFIG[dayId]?.order || 0);
+    }, 0);
+
+    return {
+        access_type: maxDay > 0 ? 'partial' : 'free',
+        max_day: maxDay,
+        is_active: true
+    };
+}
+
+async function resolveUserAccess() {
+    const telegramUserId = getTelegramUserId();
+    const fallbackAccess = getFallbackAccessState();
+
+    if (!telegramUserId || !window.supabaseStore?.getUserAccess) {
+        window.userAccess = fallbackAccess;
+        return fallbackAccess;
+    }
+
     try {
-        // Проверка существования дня
+        const remoteAccess = await window.supabaseStore.getUserAccess(telegramUserId);
+
+        if (remoteAccess && typeof remoteAccess.max_day !== 'undefined') {
+            const remoteMaxDay = Number(remoteAccess.max_day ?? 0);
+            const fallbackMaxDay = Number(fallbackAccess.max_day ?? 0);
+            const mergedMaxDay = Math.max(remoteMaxDay, fallbackMaxDay);
+            const mergedAccess = {
+                access_type: remoteAccess.access_type || (mergedMaxDay > 0 ? 'partial' : 'free'),
+                max_day: mergedMaxDay,
+                is_active: remoteAccess.is_active !== false
+            };
+
+            if (mergedMaxDay > remoteMaxDay && mergedAccess.access_type === 'free') {
+                mergedAccess.access_type = 'partial';
+            }
+
+            window.userAccess = mergedAccess;
+            return mergedAccess;
+        }
+    } catch (error) {
+        console.error('Error resolving user access from Supabase:', error);
+    }
+
+    window.userAccess = fallbackAccess;
+    return fallbackAccess;
+}
+
+function getDayNumber(dayId) {
+    return DAYS_CONFIG[dayId]?.order ?? null;
+}
+
+async function isDayLocked(dayId) {
+    try {
         if (!DAYS_CONFIG[dayId]) {
             console.warn(`isDayLocked: unknown day ID: ${dayId}`);
-            return true; // Неизвестные дни считаются заблокированными
+            return true;
         }
 
-        // Публичные дни всегда открыты
         if (PUBLIC_DAYS.includes(dayId)) {
             return false;
         }
 
-        // Проверка в списке разблокированных
-        const unlockedDays = getUnlockedDays();
-        return !unlockedDays.includes(dayId);
+        const access = await resolveUserAccess();
+        const maxDay = Number(access?.max_day ?? 0);
+
+        return getDayNumber(dayId) > maxDay;
     } catch (error) {
         console.error('Error checking day lock status:', error);
-        return true; // В случае ошибки считаем день заблокированным
+        return true;
     }
 }
 
-/**
- * Разблокировать день по коду
- * @param {string} code - Код разблокировки
- * @returns {Object} Результат операции {success, message, dayTitle?, alreadyUnlocked?}
- */
 function unlockDay(code) {
     try {
-        // Валидация входных данных
         if (typeof code !== 'string' || !code.trim()) {
             return {
                 success: false,
@@ -153,10 +161,7 @@ function unlockDay(code) {
             };
         }
 
-        // Нормализация кода (верхний регистр, удаление пробелов)
         const normalizedCode = code.trim().toUpperCase();
-
-        // Проверка существования кода
         if (!UNLOCK_CODES[normalizedCode]) {
             return {
                 success: false,
@@ -165,20 +170,16 @@ function unlockDay(code) {
         }
 
         const dayId = UNLOCK_CODES[normalizedCode];
-
-        // Проверка существования дня в конфиге
         if (!DAYS_CONFIG[dayId]) {
-            console.error(`Unlock code points to unknown day: ${dayId}`);
             return {
                 success: false,
                 message: 'Ошибка конфигурации кода'
             };
         }
 
+        const unlockedDays = getUnlockedDays();
         const dayTitle = DAYS_CONFIG[dayId].title;
 
-        // Проверка, не разблокирован ли уже
-        const unlockedDays = getUnlockedDays();
         if (unlockedDays.includes(dayId)) {
             return {
                 success: true,
@@ -188,7 +189,6 @@ function unlockDay(code) {
             };
         }
 
-        // Разблокировка дня
         const updatedDays = [...unlockedDays, dayId];
         const saved = saveUnlockedDays(updatedDays);
 
@@ -198,6 +198,12 @@ function unlockDay(code) {
                 message: 'Ошибка сохранения данных'
             };
         }
+
+        window.userAccess = {
+            access_type: 'partial',
+            max_day: Math.max(Number(window.userAccess?.max_day ?? 0), DAYS_CONFIG[dayId].order),
+            is_active: true
+        };
 
         return {
             success: true,
@@ -214,16 +220,9 @@ function unlockDay(code) {
     }
 }
 
-/**
- * Получить статус доступа к дню
- * @param {string} dayId - ID дня
- * @returns {Object} Статус {locked, reason, badge}
- */
-function getDayAccessStatus(dayId) {
+async function getDayAccessStatus(dayId) {
     try {
-        // Проверка существования дня
         if (!DAYS_CONFIG[dayId]) {
-            console.warn(`getDayAccessStatus: unknown day ID: ${dayId}`);
             return {
                 locked: true,
                 reason: 'locked',
@@ -231,7 +230,6 @@ function getDayAccessStatus(dayId) {
             };
         }
 
-        // Публичный день
         if (PUBLIC_DAYS.includes(dayId)) {
             return {
                 locked: false,
@@ -240,21 +238,12 @@ function getDayAccessStatus(dayId) {
             };
         }
 
-        // Проверка разблокировки
-        const unlockedDays = getUnlockedDays();
-        if (unlockedDays.includes(dayId)) {
-            return {
-                locked: false,
-                reason: 'unlocked',
-                badge: 'Открыто'
-            };
-        }
+        const locked = await isDayLocked(dayId);
 
-        // Заблокирован
         return {
-            locked: true,
-            reason: 'locked',
-            badge: 'Требуется код'
+            locked,
+            reason: locked ? 'locked' : 'unlocked',
+            badge: locked ? 'Требуется доступ' : 'Открыто'
         };
     } catch (error) {
         console.error('Error getting day access status:', error);
@@ -266,10 +255,6 @@ function getDayAccessStatus(dayId) {
     }
 }
 
-/**
- * Проверить параметр unlock в URL и автоматически разблокировать день
- * @returns {Object|null} Результат разблокировки или null если параметра нет
- */
 function checkUnlockFromURL() {
     try {
         const urlParams = new URLSearchParams(window.location.search);
@@ -279,12 +264,8 @@ function checkUnlockFromURL() {
             return null;
         }
 
-        console.log('Found unlock code in URL:', unlockCode);
-
-        // Попытка разблокировки
         const result = unlockDay(unlockCode);
 
-        // Очистка URL от параметра unlock (опционально)
         if (result.success && window.history && window.history.replaceState) {
             const cleanUrl = window.location.pathname + window.location.hash;
             window.history.replaceState({}, document.title, cleanUrl);
@@ -297,40 +278,36 @@ function checkUnlockFromURL() {
     }
 }
 
-/**
- * Получить все дни с их статусами доступа
- * @returns {Array} Массив объектов с информацией о днях
- */
-function getAllDaysWithStatus() {
+async function getAllDaysWithStatus() {
     try {
-        return Object.keys(DAYS_CONFIG).map(dayId => {
-            const config = DAYS_CONFIG[dayId];
-            const status = getDayAccessStatus(dayId);
-            
-            return {
-                id: dayId,
-                title: config.title,
-                duration: config.duration,
-                order: config.order,
-                locked: status.locked,
-                reason: status.reason,
-                badge: status.badge
-            };
-        }).sort((a, b) => a.order - b.order);
+        const dayEntries = await Promise.all(
+            Object.keys(DAYS_CONFIG).map(async dayId => {
+                const config = DAYS_CONFIG[dayId];
+                const status = await getDayAccessStatus(dayId);
+
+                return {
+                    id: dayId,
+                    title: config.title,
+                    duration: config.duration,
+                    order: config.order,
+                    locked: status.locked,
+                    reason: status.reason,
+                    badge: status.badge
+                };
+            })
+        );
+
+        return dayEntries.sort((a, b) => a.order - b.order);
     } catch (error) {
         console.error('Error getting all days with status:', error);
         return [];
     }
 }
 
-/**
- * Сбросить все разблокировки (для отладки)
- * @returns {boolean} Успешность операции
- */
 function resetAllUnlocks() {
     try {
         localStorage.removeItem(STORAGE_KEY);
-        console.log('All unlocks have been reset');
+        window.userAccess = null;
         return true;
     } catch (error) {
         console.error('Error resetting unlocks:', error);
@@ -338,23 +315,12 @@ function resetAllUnlocks() {
     }
 }
 
-// Инициализация при загрузке страницы
 if (typeof window !== 'undefined') {
     window.addEventListener('DOMContentLoaded', () => {
-        const unlockResult = checkUnlockFromURL();
-        
-        if (unlockResult) {
-            console.log('Auto-unlock result:', unlockResult);
-            
-            // Можно показать уведомление пользователю
-            if (unlockResult.success && !unlockResult.alreadyUnlocked) {
-                console.log(`✅ ${unlockResult.message}`);
-            }
-        }
+        checkUnlockFromURL();
     });
 }
 
-// Экспорт функций для использования в других модулях
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         DAYS_CONFIG,

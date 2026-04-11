@@ -10,54 +10,58 @@ const COURSE_DAY_TITLES = {
     'day-7': 'Аналитика и запуск проекта'
 };
 
+let guidesInitialized = false;
+
 // 1. Функция renderDays()
-function renderDays() {
+async function renderDays() {
     const container = document.getElementById('days-container');
     if (!container) return;
     container.innerHTML = ''; // Очищаем контейнер перед рендерингом
 
     // Получаем прогресс, если функция доступна
-    const progress = typeof getProgress === 'function' ? getProgress() : {};
+    const progress = typeof getProgress === 'function' ? await getProgress() : {};
 
-    Object.entries(DAYS_CONFIG)
-        .filter(([dayId]) => dayId !== 'day-0')
-        .forEach(([dayId, dayInfo]) => {
-        const accessStatus = getDayAccessStatus(dayId);
-        const isCompleted = progress[dayId]?.completed || false;
-        const displayTitle = COURSE_DAY_TITLES[dayId] || dayInfo.title;
-        const statusIcon = accessStatus.locked ? '🔒' : (isCompleted ? '✅' : '→');
+    await Promise.all(
+        Object.entries(DAYS_CONFIG)
+            .filter(([dayId]) => dayId !== 'day-0')
+            .map(async ([dayId, dayInfo]) => {
+                const accessStatus = await getDayAccessStatus(dayId);
+                const isCompleted = progress[dayId]?.completed || false;
+                const displayTitle = COURSE_DAY_TITLES[dayId] || dayInfo.title;
+                const statusIcon = accessStatus.locked ? '🔒' : (isCompleted ? '✅' : '→');
 
-        const card = document.createElement('div');
-        card.className = `day-card${accessStatus.locked ? ' locked' : ''}${isCompleted ? ' completed' : ''}`;
-        card.innerHTML = `
-            <div class="day-card__number">${dayInfo.order}</div>
-            <div class="day-card__content">
-                <div class="day-card__title">День ${dayInfo.order}: ${displayTitle}</div>
-                <div class="day-card__duration">${dayInfo.duration || ''}</div>
-            </div>
-            <div class="day-card__status">${statusIcon}</div>
-        `;
+                const card = document.createElement('div');
+                card.className = `day-card${accessStatus.locked ? ' locked' : ''}${isCompleted ? ' completed' : ''}`;
+                card.innerHTML = `
+                    <div class="day-card__number">${dayInfo.order}</div>
+                    <div class="day-card__content">
+                        <div class="day-card__title">День ${dayInfo.order}: ${displayTitle}</div>
+                        <div class="day-card__duration">${dayInfo.duration || ''}</div>
+                    </div>
+                    <div class="day-card__status">${statusIcon}</div>
+                `;
 
-        if (!accessStatus.locked) {
-            card.setAttribute('role', 'link');
-            card.setAttribute('tabindex', '0');
-            card.addEventListener('click', () => {
-                window.location.href = `day.html?id=${dayId}`;
-            });
-            card.addEventListener('keydown', (event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    window.location.href = `day.html?id=${dayId}`;
+                if (!accessStatus.locked) {
+                    card.setAttribute('role', 'link');
+                    card.setAttribute('tabindex', '0');
+                    card.addEventListener('click', () => {
+                        window.location.href = `day.html?id=${dayId}`;
+                    });
+                    card.addEventListener('keydown', (event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            window.location.href = `day.html?id=${dayId}`;
+                        }
+                    });
                 }
-            });
-        }
 
-        container.appendChild(card);
-    });
+                container.appendChild(card);
+            })
+    );
 
     // Обновляем прогресс-бар, если функция подключена
     if (typeof updateProgressBar === 'function') {
-        updateProgressBar();
+        await updateProgressBar();
     }
 }
 
@@ -151,7 +155,7 @@ function showToast(message) {
 }
 
 // 5. Функция promptUnlockCode(dayId)
-function promptUnlockCode(dayId) {
+async function promptUnlockCode(dayId) {
     const code = prompt('Введите код из сообщения преподавателя:');
     if (code) {
         // Мы предполагаем, что unlockDay возвращает объект вида { success: true|false, message: "..." }
@@ -159,7 +163,7 @@ function promptUnlockCode(dayId) {
         
         if (result && result.success) {
             showToast(`✅ ${result.message}`);
-            renderDays(); // Перерисовать список
+            await renderDays(); // Перерисовать список
         } else {
             // Добавляем вибрацию при ошибке, если Telegram SDK подключен
             if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
@@ -205,8 +209,9 @@ function initializeUserProfile() {
 
 // 7. Переключение экранов через нижний таббар
 function showAppSection(sectionId, activeTabId) {
-    const sectionIds = ['home-section', 'about-section', 'course-section', 'guides-section', 'profile-section'];
-    const isAboutSection = sectionId === 'about-section';
+    const sectionIds = ['home-section', 'about-section', 'quiz-section', 'course-section', 'guides-section', 'profile-section'];
+    const hiddenChromeSections = ['about-section', 'quiz-section'];
+    const isChromeHidden = hiddenChromeSections.includes(sectionId);
     const tabBar = document.querySelector('.tab-bar');
     const appHeader = document.querySelector('.app-header');
 
@@ -222,16 +227,41 @@ function showAppSection(sectionId, activeTabId) {
     });
 
     if (tabBar) {
-        tabBar.style.display = isAboutSection ? 'none' : '';
+        tabBar.style.display = isChromeHidden ? 'none' : '';
     }
 
     if (appHeader) {
-        appHeader.style.display = isAboutSection ? 'none' : '';
+        appHeader.style.display = isChromeHidden ? 'none' : '';
     }
 
-    document.body.classList.toggle('about-open', isAboutSection);
+    document.body.classList.toggle('about-open', sectionId === 'about-section');
+    document.body.classList.toggle('quiz-open', sectionId === 'quiz-section');
 
-    if (typeof setupBackButton === 'function' && isAboutSection) {
+    if (sectionId === 'quiz-section' && window.quizApp?.openQuiz) {
+        window.quizApp.openQuiz();
+    }
+
+    if (sectionId === 'guides-section') {
+        if (!guidesInitialized && typeof initGuides === 'function') {
+            initGuides()
+                .then(() => {
+                    guidesInitialized = true;
+                })
+                .catch((error) => {
+                    console.error('Ошибка инициализации гайдов:', error);
+                });
+        }
+
+        if (typeof trackEvent === 'function') {
+            try {
+                trackEvent('guides_viewed');
+            } catch (error) {
+                console.warn('[Analytics] Ошибка трекинга guides_viewed:', error);
+            }
+        }
+    }
+
+    if (typeof setupBackButton === 'function' && isChromeHidden) {
         setupBackButton(() => {
             showAppSection('home-section', 'tab-home');
         });
@@ -262,7 +292,7 @@ function setupTabNavigation() {
 
     const quickActions = [
         ['btn-about', 'about-section', null],
-        ['card-quiz', 'guides-section', 'tab-guides'],
+        ['card-quiz', 'quiz-section', null],
         ['card-continue', 'course-section', 'tab-course'],
         ['profile-progress-link', 'course-section', 'tab-course']
     ];
@@ -288,7 +318,7 @@ function setupTabNavigation() {
 }
 
 // 8. Инициализация
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // Предотвращаем сворачивание при скроллинге
     if (window.Telegram && window.Telegram.WebApp) {
         const tgApp = window.Telegram.WebApp;
@@ -305,9 +335,24 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
         const tgUser = (typeof Telegram !== 'undefined' && 
             Telegram.WebApp?.initDataUnsafe?.user) || null;
+
+        window.currentTelegramUser = tgUser;
+        window.currentTelegramUserId = tgUser?.id || null;
         
         if (typeof initAnalytics === 'function') {
             initAnalytics(tgUser);
+        }
+
+        if (window.supabaseStore?.initUser && tgUser) {
+            await window.supabaseStore.initUser(tgUser);
+        }
+
+        if (window.supabaseStore?.getUserAccess && window.currentTelegramUserId) {
+            window.userAccess = await window.supabaseStore.getUserAccess(window.currentTelegramUserId);
+        }
+
+        if (window.supabaseStore?.getProgress && window.currentTelegramUserId) {
+            window.userProgress = await window.supabaseStore.getProgress(window.currentTelegramUserId);
         }
     } catch(e) {}
 
@@ -316,7 +361,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // В случае если DAYS_CONFIG загрузился до app.js
     if (typeof DAYS_CONFIG !== 'undefined') {
-        renderDays();
+        await renderDays();
     } else {
         console.warn('Внимание: DAYS_CONFIG не определен. Убедитесь, что access.js подключен до app.js в HTML файле.');
     }
