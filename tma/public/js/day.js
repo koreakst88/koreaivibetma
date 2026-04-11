@@ -11,11 +11,66 @@ document.addEventListener('DOMContentLoaded', function() {
     } catch(e) {}
 });
 
+function setDayStatusBadge(text, state = 'default') {
+    const badge = document.getElementById('day-status-badge');
+    if (!badge) return;
+
+    badge.textContent = text;
+    badge.dataset.state = state;
+}
+
+function updateChecklistVisualState() {
+    const checklistItems = document.querySelectorAll('#day-content li');
+
+    checklistItems.forEach((item) => {
+        const checkbox = item.querySelector('input[type="checkbox"]');
+        if (!checkbox) return;
+
+        item.classList.add('checklist-item');
+        item.classList.toggle('checked', checkbox.checked);
+    });
+}
+
+function updateLessonProgressUI() {
+    const checkboxes = Array.from(document.querySelectorAll('#day-content input[type="checkbox"]'));
+    const progressBar = document.getElementById('lesson-progress-bar');
+    const completeBlock = document.getElementById('day-complete-block');
+
+    if (!progressBar) return;
+
+    if (checkboxes.length === 0) {
+        progressBar.style.width = '0%';
+        if (completeBlock) {
+            completeBlock.style.display = 'none';
+        }
+        setDayStatusBadge('Материал', 'default');
+        return;
+    }
+
+    const checkedCount = checkboxes.filter((checkbox) => checkbox.checked).length;
+    const progressPercent = Math.round((checkedCount / checkboxes.length) * 100);
+
+    progressBar.style.width = `${progressPercent}%`;
+    setDayStatusBadge(`${checkedCount}/${checkboxes.length}`, checkedCount === checkboxes.length ? 'complete' : 'progress');
+
+    if (completeBlock) {
+        const wasVisible = completeBlock.style.display !== 'none';
+        const isComplete = checkedCount === checkboxes.length;
+
+        completeBlock.style.display = isComplete ? '' : 'none';
+
+        if (isComplete && !wasVisible && window.Telegram?.WebApp?.HapticFeedback) {
+            window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+        }
+    }
+}
+
 // 1. Основная загрузка
 async function loadDayContent() {
     // Получаем ID дня из URL
     const urlParams = new URLSearchParams(window.location.search);
     const dayId = urlParams.get('id');
+    const container = document.getElementById('day-content');
 
     // Если id нет (перешли напрямую), возвращаем на главную
     if (!dayId) {
@@ -24,9 +79,10 @@ async function loadDayContent() {
     }
 
     // Проверка доступа из access.js
-    if (typeof isDayLocked === 'function' && isDayLocked(dayId)) {
+    if (typeof isDayLocked === 'function' && await isDayLocked(dayId)) {
         showLockedMessage();
         document.getElementById('day-title').textContent = 'Доступ закрыт';
+        setDayStatusBadge('Закрыт', 'locked');
         return;
     }
 
@@ -52,9 +108,6 @@ async function loadDayContent() {
     }
 
     try {
-        // Рендер заглушки
-        const container = document.getElementById('day-content');
-
         // Загрузка markdown
         const response = await fetch(`content/${dayId}.md`);
 
@@ -93,9 +146,10 @@ async function loadDayContent() {
         // Рендерим через marked.js
         const html = marked.parse(markdown);
         container.innerHTML = html;
+        setDayStatusBadge('Урок', 'default');
 
         // Инициализируем чек-листы после рендеринга Markdown
-        initChecklists(dayId);
+        await initChecklists(dayId);
 
         // Плавная прокрутка для якорных ссылок (Оглавление) специально для Telegram WebApp
         const anchorLinks = container.querySelectorAll('a[href^="#"]');
@@ -124,11 +178,11 @@ async function loadDayContent() {
         _trackChecklistEvents(dayId, dayTitle);
 
         // Если загрузка успешна, вычисляем кнопки навигации
-        setupNavigation(dayId);
+        await setupNavigation(dayId);
 
         // Отмечаем день как пройденный (если функция доступна)
         if (typeof markDayCompleted === 'function') {
-            markDayCompleted(dayId);
+            await markDayCompleted(dayId);
         }
 
         // Событие: день завершён (контент загружен и отмечен как пройденный)
@@ -165,16 +219,18 @@ async function loadDayContent() {
  * Функция для инициализации чек-листов после рендеринга Markdown
  * @param {string} dayId
  */
-function initChecklists(dayId) {
+async function initChecklists(dayId) {
     const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-
-    // Загружаем сохраненные состояния из LocalStorage (progress.js)
-    const savedProgress = JSON.parse(localStorage.getItem(`progress_${dayId}`)) || {};
+    const dayProgress = typeof getDayProgress === 'function'
+        ? await getDayProgress(dayId)
+        : null;
+    const savedProgress = Array.isArray(dayProgress?.checklists)
+        ? dayProgress.checklists
+        : [];
 
     checkboxes.forEach((cb, index) => {
-        // Восстанавливаем состояние (используем строковый ключ для совместимости с JSON)
-        const key = String(index);
-        if (savedProgress[key] === true) {
+        // Восстанавливаем состояние чек-листа из progress.js / Supabase
+        if (savedProgress[index] === true) {
             cb.checked = true;
         }
 
@@ -182,9 +238,13 @@ function initChecklists(dayId) {
         cb.disabled = false;
 
         // Слушаем клики
-        cb.addEventListener('change', () => {
-            savedProgress[key] = cb.checked;
-            localStorage.setItem(`progress_${dayId}`, JSON.stringify(savedProgress));
+        cb.addEventListener('change', async () => {
+            if (typeof updateChecklist === 'function') {
+                await updateChecklist(dayId, index, cb.checked);
+            }
+
+            updateChecklistVisualState();
+            updateLessonProgressUI();
 
             // Легкая вибрация в Telegram при клике
             if (window.Telegram?.WebApp) {
@@ -192,6 +252,9 @@ function initChecklists(dayId) {
             }
         });
     });
+
+    updateChecklistVisualState();
+    updateLessonProgressUI();
 }
 
 /**
@@ -237,7 +300,7 @@ function _trackChecklistEvents(dayId, dayTitle) {
 }
 
 // 2. Навигация внизу страницы
-function setupNavigation(currentDayId) {
+async function setupNavigation(currentDayId) {
     if (typeof DAYS_CONFIG === 'undefined') return;
 
     // Преобразуем объект в массив ключей, отсортированный по order
@@ -264,11 +327,17 @@ function setupNavigation(currentDayId) {
         const nextId = daysArray[currentIndex + 1];
 
         // Для следующего дня нужно проверить, не заблокирован ли он
-        const isLocked = typeof isDayLocked === 'function' ? isDayLocked(nextId) : false;
+        const isLocked = typeof isDayLocked === 'function' ? await isDayLocked(nextId) : false;
 
         if (!isLocked) {
             nextBtn.classList.remove('hidden');
-            nextBtn.onclick = () => { window.location.href = `day.html?id=${nextId}`; };
+            nextBtn.onclick = () => {
+                if (window.Telegram?.WebApp?.HapticFeedback) {
+                    window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+                }
+
+                window.location.href = `day.html?id=${nextId}`;
+            };
         } else {
             // Если заблокирован, скрываем кнопку
             nextBtn.classList.add('hidden');
@@ -286,24 +355,38 @@ function goBack() {
 // 4. Окно, если день недоступен (поделили ссылкой напрямую)
 function showLockedMessage() {
     const container = document.getElementById('day-content');
-    container.innerHTML = `
-        <div class="text-center py-16 bg-gray-50 rounded-2xl border border-gray-100 mt-4">
-            <div class="text-6xl mb-6 transform hover:scale-110 transition-transform">🔒</div>
-            <h2 class="text-2xl font-bold text-gray-800 mb-3">Этот день недоступен</h2>
-            <p class="text-gray-500 mb-8 max-w-sm mx-auto">Чтобы открыть эти материалы, вам необходимо оформить полный курс или дождаться разблокировки.</p>
-            <button onclick="goBack()" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-8 rounded-xl transition-colors shadow-sm inline-flex items-center">
-                <svg class="w-5 h-5 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                Вернуться на главную
-            </button>
-        </div>
-    `;
+    const contentShell = document.querySelector('.lesson-content-shell');
+    const lockedBlock = document.getElementById('day-locked-block');
+    const completeBlock = document.getElementById('day-complete-block');
+    const footer = document.querySelector('.lesson-footer');
 
-    // Скрываем навигацию снизу, она тут не нужна
-    document.querySelector('nav').style.display = 'none';
+    container.innerHTML = '';
+
+    if (contentShell) {
+        contentShell.style.display = 'none';
+    }
+
+    if (completeBlock) {
+        completeBlock.style.display = 'none';
+    }
+
+    if (lockedBlock) {
+        lockedBlock.style.display = '';
+    }
+
+    if (footer) {
+        footer.style.display = 'none';
+    }
 }
 
 // 5. Инициализация
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    const tgUser = (typeof Telegram !== 'undefined' &&
+        Telegram.WebApp?.initDataUnsafe?.user) || null;
+
+    window.currentTelegramUser = tgUser;
+    window.currentTelegramUserId = tgUser?.id || null;
+
     // Вызов функции setupBackButton из telegram.js (чтобы показать стрелочку в тулбаре TG)
     if (typeof setupBackButton === 'function') {
         setupBackButton(() => {
@@ -311,6 +394,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    if (window.supabaseStore?.initUser && tgUser) {
+        await window.supabaseStore.initUser(tgUser);
+    }
+
     // Запускаем основной цикл
-    loadDayContent();
+    await loadDayContent();
 });
