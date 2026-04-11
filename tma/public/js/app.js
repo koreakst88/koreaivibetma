@@ -1,5 +1,15 @@
 // tma/public/js/app.js
 
+const COURSE_DAY_TITLES = {
+    'day-1': 'Основы Vibe Coding',
+    'day-2': 'Как устроены приложения Telegram',
+    'day-3': 'Формы и взаимодействие',
+    'day-4': 'Интеграция с Telegram',
+    'day-5': 'Платежи и подключение API',
+    'day-6': 'Автоматизация процессов',
+    'day-7': 'Аналитика и запуск проекта'
+};
+
 // 1. Функция renderDays()
 function renderDays() {
     const container = document.getElementById('days-container');
@@ -9,60 +19,39 @@ function renderDays() {
     // Получаем прогресс, если функция доступна
     const progress = typeof getProgress === 'function' ? getProgress() : {};
 
-    Object.entries(DAYS_CONFIG).forEach(([dayId, dayInfo]) => {
+    Object.entries(DAYS_CONFIG)
+        .filter(([dayId]) => dayId !== 'day-0')
+        .forEach(([dayId, dayInfo]) => {
         const accessStatus = getDayAccessStatus(dayId);
         const isCompleted = progress[dayId]?.completed || false;
+        const displayTitle = COURSE_DAY_TITLES[dayId] || dayInfo.title;
+        const statusIcon = accessStatus.locked ? '🔒' : (isCompleted ? '✅' : '→');
 
         const card = document.createElement('div');
-        // Базовые tailwind стили для карточки
-        card.className = `day-card bg-white rounded-lg shadow p-4 flex flex-col justify-between transition-all duration-300 hover:shadow-md ${accessStatus.locked ? 'opacity-90' : ''}`;
+        card.className = `day-card${accessStatus.locked ? ' locked' : ''}${isCompleted ? ' completed' : ''}`;
+        card.innerHTML = `
+            <div class="day-card__number">${dayInfo.order}</div>
+            <div class="day-card__content">
+                <div class="day-card__title">День ${dayInfo.order}: ${displayTitle}</div>
+                <div class="day-card__duration">${dayInfo.duration || ''}</div>
+            </div>
+            <div class="day-card__status">${statusIcon}</div>
+        `;
 
-        let innerHTML = '';
-
-        if (accessStatus.locked) {
-            // Если locked: Иконка 🔒, Заголовок, Бейдж, Кнопка "Записаться на курс"
-            innerHTML = `
-                <div class="mb-4 text-center text-4xl">🔒</div>
-                <div class="day-info text-center flex-grow flex flex-col items-center">
-                    <h3 class="text-xl font-bold text-gray-800 mb-1">День ${dayInfo.order}: ${dayInfo.title}</h3>
-                    <p class="text-sm text-gray-500 mb-3">${dayInfo.duration || ''}</p>
-                    <span class="badge inline-block bg-gray-100 text-gray-600 text-xs font-semibold px-3 py-1 rounded-full mb-4 border border-gray-200">${accessStatus.badge || 'Для учеников курса'}</span>
-                </div>
-                <button onclick="showEnrollmentInfo()" class="btn-enroll w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors shadow-sm">
-                    Записаться на курс
-                </button>
-                <div class="text-center mt-3">
-                    <button onclick="promptUnlockCode('${dayId}')" class="text-xs text-blue-500 hover:text-blue-700 hover:underline">У меня есть код доступа</button>
-                </div>
-            `;
-        } else if (accessStatus.reason === 'public') {
-            // Если reason === 'public': Иконка 🎁, Заголовок, Бейдж "Бесплатно", Кнопка "Открыть бесплатно"
-             innerHTML = `
-                <div class="mb-4 text-center text-4xl transform hover:scale-110 transition-transform">🎁</div>
-                <div class="day-info text-center flex-grow flex flex-col items-center">
-                    <h3 class="text-xl font-bold text-gray-800 mb-1">День ${dayInfo.order}: ${dayInfo.title}</h3>
-                    <p class="text-sm text-gray-500 mb-3">${dayInfo.duration || ''}</p>
-                    <span class="badge inline-block bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-xs font-semibold px-3 py-1 rounded-full mb-4 shadow-sm">Бесплатно</span>
-                </div>
-                <a href="day.html?id=${dayId}" class="btn-open block w-full text-center bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors shadow-sm">
-                    Открыть бесплатно
-                </a>
-            `;
-        } else {
-             // Если unlocked: Иконка 📖 (или ✅), Заголовок, Кнопка "Открыть"
-             innerHTML = `
-                <div class="mb-4 text-center text-4xl transform hover:scale-110 transition-transform">${isCompleted ? '✅' : '📖'}</div>
-                <div class="day-info text-center flex-grow flex flex-col items-center">
-                    <h3 class="text-xl font-bold text-gray-800 mb-1">День ${dayInfo.order}: ${dayInfo.title}</h3>
-                    <p class="text-sm text-gray-500 mb-4">${dayInfo.duration || ''}</p>
-                </div>
-                <a href="day.html?id=${dayId}" class="btn-open block w-full text-center bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors shadow-sm">
-                    Открыть
-                </a>
-            `;
+        if (!accessStatus.locked) {
+            card.setAttribute('role', 'link');
+            card.setAttribute('tabindex', '0');
+            card.addEventListener('click', () => {
+                window.location.href = `day.html?id=${dayId}`;
+            });
+            card.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    window.location.href = `day.html?id=${dayId}`;
+                }
+            });
         }
 
-        card.innerHTML = innerHTML;
         container.appendChild(card);
     });
 

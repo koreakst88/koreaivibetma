@@ -171,27 +171,31 @@
             </section>
 
             <section id="course-section" class="content-section" style="display:none">
-                <div class="section-heading">
-                    <p class="section-kicker">О курсе</p>
-                    <h2>Как проходит обучение</h2>
-                    <p class="text-secondary">Изучайте материалы по дням, открывайте уроки по мере продвижения и возвращайтесь к ним в удобное время.</p>
+                <div class="course-section__header">
+                    <h2>Курс</h2>
+                    <p class="text-secondary">Ваш путь обучения</p>
                 </div>
 
-                <div class="about-card card">
-                    <h3>Что вас ждёт</h3>
-                    <p class="text-secondary">7 индивидуальных занятий, практика на реальном Telegram Mini App и поддержка преподавателя на каждом этапе.</p>
-                    <button onclick="contactTeacher()" class="btn-primary about-card__button">
-                        Написать преподавателю
-                    </button>
+                <div class="course-progress card">
+                    <div class="course-progress__row">
+                        <p class="course-progress__label">Пройдено дней</p>
+                        <div class="course-progress__value"><span id="progress-days">0</span> / 7</div>
+                    </div>
+
+                    <div class="progress-bar">
+                        <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+                    </div>
+
+                    <p id="progress-text" class="course-progress__caption">0% завершено</p>
                 </div>
 
                 <div id="days-section" class="course-days">
-                    <div class="section-heading">
-                        <p class="section-kicker">Доступ</p>
-                        <h2>Материалы по дням</h2>
-                    </div>
                     <div id="days-container" class="course-days-grid"></div>
                 </div>
+
+                <button type="button" class="course-unlock-link" onclick="promptUnlockCode('day-1')">
+                    У меня есть код доступа
+                </button>
             </section>
 
             <section id="guides-section" class="content-section" style="display:none">
@@ -223,22 +227,9 @@
             <section id="profile-section" class="content-section" style="display:none">
                 <div class="section-heading">
                     <p class="section-kicker">Профиль</p>
-                    <h2>Ваш прогресс</h2>
-                    <p class="text-secondary">Отслеживайте, сколько дней уже пройдено, и возвращайтесь к обучению в удобном темпе.</p>
+                    <h2>Профиль</h2>
+                    <p class="text-secondary">Ваши материалы, навигация по курсу и связь с преподавателем всегда под рукой.</p>
                 </div>
-
-                <section class="progress-card card" aria-labelledby="progress-text">
-                    <div class="progress-card__header">
-                        <div>
-                            <p class="progress-card__label text-secondary">Ваш прогресс</p>
-                            <div id="progress-text" class="progress-card__value">0/7 дней пройдено</div>
-                        </div>
-                        <a id="profile-progress-link" class="progress-card__link" href="#course-section">К материалам</a>
-                    </div>
-                    <div class="progress-track">
-                        <div id="progress-fill" class="progress-indicator"></div>
-                    </div>
-                </section>
 
                 <div class="profile-card card">
                     <div class="profile-card__top">

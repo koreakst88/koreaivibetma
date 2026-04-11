@@ -535,6 +535,62 @@ body {
   gap: 16px;
 }
 
+.index-page .course-section__header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.index-page .course-section__header h2,
+.index-page .course-section__header p {
+  margin: 0;
+}
+
+.index-page .course-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.index-page .course-progress__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.index-page .course-progress__label {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.index-page .course-progress__value {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--color-text-primary);
+}
+
+.index-page .course-progress__caption {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.index-page .course-unlock-link {
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin-top: 2px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-primary);
+  cursor: pointer;
+  text-align: center;
+}
+
 .index-page .about-section {
   display: flex;
   flex-direction: column;
@@ -751,7 +807,7 @@ body {
 .index-page .course-days-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 12px;
+  gap: 0;
 }
 
 .index-page .profile-card {
@@ -896,37 +952,71 @@ html {
 
 /* 3. Стили для карточек дней */
 .day-card {
-  border: 1px solid rgba(0,0,0,0.05);
-  border-radius: 12px;
-  padding: var(--spacing-md);
+  background: var(--color-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 16px;
   display: flex;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-  background-color: var(--tg-bg);
-  box-shadow: var(--shadow-sm);
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1.5px solid var(--color-border);
 }
 
 .day-card.locked {
-  opacity: 0.6;
-}
-
-/* Искуственное переопределение серого цвета в светлой теме, 
-   чтобы карточки не сливались с фоном, 
-   но в темной теме телеграма они будут подстраиваться */
-body:not(.dark-theme) .day-card {
-    background-color: #ffffff; 
-}
-body.dark-theme .day-card {
-    border-color: rgba(255,255,255,0.05);
+  opacity: 0.5;
+  cursor: default;
+  pointer-events: none;
 }
 
 .day-card.completed {
-  border-color: var(--success);
-  border-width: 2px;
+  border-color: var(--color-success);
 }
 
 .day-card:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+
+.day-card__number {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--color-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.day-card__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.day-card__title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+
+.day-card__duration {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.day-card__status {
+  margin-left: auto;
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
 }
 
 /* 4. Бейджи */
@@ -956,10 +1046,10 @@ body.dark-theme .badge-locked {
 
 /* 5. Прогресс-бар */
 .progress-bar {
-  background-color: rgba(0,0,0,0.05);
+  background-color: rgba(45, 77, 224, 0.08);
   border-radius: 9999px;
   overflow: hidden;
-  height: 1rem;
+  height: 10px;
   width: 100%;
 }
 body.dark-theme .progress-bar {
@@ -967,7 +1057,7 @@ body.dark-theme .progress-bar {
 }
 
 .progress-fill {
-  background-color: var(--success);
+  background: linear-gradient(90deg, var(--color-primary) 0%, #5B77F0 100%);
   height: 100%;
   border-radius: 9999px;
   transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);

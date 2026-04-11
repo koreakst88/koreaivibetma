@@ -235,7 +235,8 @@ function updateChecklist(dayId, checklistIndex, checked) {
 function getTotalProgress() {
     try {
         const progress = getProgress();
-        const totalDays = Object.keys(DAYS_CONFIG).length;
+        const courseDayIds = Object.keys(DAYS_CONFIG).filter(dayId => DAYS_CONFIG[dayId]?.order > 0);
+        const totalDays = courseDayIds.length;
         
         if (totalDays === 0) {
             return {
@@ -245,7 +246,7 @@ function getTotalProgress() {
             };
         }
 
-        const completedDays = Object.keys(progress).filter(dayId => {
+        const completedDays = courseDayIds.filter(dayId => {
             return progress[dayId] && progress[dayId].completed === true;
         }).length;
 
@@ -260,7 +261,7 @@ function getTotalProgress() {
         console.error('Error calculating total progress:', error);
         return {
             completed: 0,
-            total: Object.keys(DAYS_CONFIG).length,
+            total: Object.keys(DAYS_CONFIG).filter(dayId => DAYS_CONFIG[dayId]?.order > 0).length,
             percentage: 0
         };
     }
@@ -277,7 +278,12 @@ function updateProgressBar() {
         // Обновить текст прогресса
         const progressText = document.getElementById('progress-text');
         if (progressText) {
-            progressText.textContent = `${progressData.completed}/${progressData.total} дней пройдено`;
+            progressText.textContent = `${progressData.percentage}% завершено`;
+        }
+
+        const progressDays = document.getElementById('progress-days');
+        if (progressDays) {
+            progressDays.textContent = String(progressData.completed);
         }
 
         // Обновить заполнение прогресс-бара
