@@ -15,18 +15,6 @@ const DAYS_CONFIG = {
     'day-7': { title: 'Аналитика и финал', duration: '60 мин', order: 7 }
 };
 
-// Коды разблокировки дней
-const UNLOCK_CODES = {
-    'DAY0': 'day-0',
-    'DAY1': 'day-1',
-    'DAY2': 'day-2',
-    'DAY3': 'day-3',
-    'DAY4': 'day-4',
-    'DAY5': 'day-5',
-    'DAY6': 'day-6',
-    'DAY7': 'day-7'
-};
-
 // Публичные дни (доступны всем без кода)
 const PUBLIC_DAYS = ['day-0'];
 
@@ -59,21 +47,6 @@ function getUnlockedDays() {
     } catch (error) {
         console.error('Error reading unlocked days from storage:', error);
         return [];
-    }
-}
-
-function saveUnlockedDays(days) {
-    try {
-        if (!Array.isArray(days)) {
-            return false;
-        }
-
-        const unique = [...new Set(days.filter(dayId => typeof dayId === 'string' && Boolean(DAYS_CONFIG[dayId])))];
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(unique));
-        return true;
-    } catch (error) {
-        console.error('Error saving unlocked days to storage:', error);
-        return false;
     }
 }
 
@@ -152,74 +125,6 @@ async function isDayLocked(dayId) {
     }
 }
 
-function unlockDay(code) {
-    try {
-        if (typeof code !== 'string' || !code.trim()) {
-            return {
-                success: false,
-                message: 'Код не может быть пустым'
-            };
-        }
-
-        const normalizedCode = code.trim().toUpperCase();
-        if (!UNLOCK_CODES[normalizedCode]) {
-            return {
-                success: false,
-                message: 'Неверный код разблокировки'
-            };
-        }
-
-        const dayId = UNLOCK_CODES[normalizedCode];
-        if (!DAYS_CONFIG[dayId]) {
-            return {
-                success: false,
-                message: 'Ошибка конфигурации кода'
-            };
-        }
-
-        const unlockedDays = getUnlockedDays();
-        const dayTitle = DAYS_CONFIG[dayId].title;
-
-        if (unlockedDays.includes(dayId)) {
-            return {
-                success: true,
-                message: `День "${dayTitle}" уже разблокирован`,
-                dayTitle: dayTitle,
-                alreadyUnlocked: true
-            };
-        }
-
-        const updatedDays = [...unlockedDays, dayId];
-        const saved = saveUnlockedDays(updatedDays);
-
-        if (!saved) {
-            return {
-                success: false,
-                message: 'Ошибка сохранения данных'
-            };
-        }
-
-        window.userAccess = {
-            access_type: 'partial',
-            max_day: Math.max(Number(window.userAccess?.max_day ?? 0), DAYS_CONFIG[dayId].order),
-            is_active: true
-        };
-
-        return {
-            success: true,
-            message: `День "${dayTitle}" успешно разблокирован!`,
-            dayTitle: dayTitle,
-            alreadyUnlocked: false
-        };
-    } catch (error) {
-        console.error('Error unlocking day:', error);
-        return {
-            success: false,
-            message: 'Произошла ошибка при разблокировке'
-        };
-    }
-}
-
 async function getDayAccessStatus(dayId) {
     try {
         if (!DAYS_CONFIG[dayId]) {
@@ -255,83 +160,12 @@ async function getDayAccessStatus(dayId) {
     }
 }
 
-function checkUnlockFromURL() {
-    try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const unlockCode = urlParams.get('unlock');
-
-        if (!unlockCode) {
-            return null;
-        }
-
-        const result = unlockDay(unlockCode);
-
-        if (result.success && window.history && window.history.replaceState) {
-            const cleanUrl = window.location.pathname + window.location.hash;
-            window.history.replaceState({}, document.title, cleanUrl);
-        }
-
-        return result;
-    } catch (error) {
-        console.error('Error checking unlock from URL:', error);
-        return null;
-    }
-}
-
-async function getAllDaysWithStatus() {
-    try {
-        const dayEntries = await Promise.all(
-            Object.keys(DAYS_CONFIG).map(async dayId => {
-                const config = DAYS_CONFIG[dayId];
-                const status = await getDayAccessStatus(dayId);
-
-                return {
-                    id: dayId,
-                    title: config.title,
-                    duration: config.duration,
-                    order: config.order,
-                    locked: status.locked,
-                    reason: status.reason,
-                    badge: status.badge
-                };
-            })
-        );
-
-        return dayEntries.sort((a, b) => a.order - b.order);
-    } catch (error) {
-        console.error('Error getting all days with status:', error);
-        return [];
-    }
-}
-
-function resetAllUnlocks() {
-    try {
-        localStorage.removeItem(STORAGE_KEY);
-        window.userAccess = null;
-        return true;
-    } catch (error) {
-        console.error('Error resetting unlocks:', error);
-        return false;
-    }
-}
-
-if (typeof window !== 'undefined') {
-    window.addEventListener('DOMContentLoaded', () => {
-        checkUnlockFromURL();
-    });
-}
-
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         DAYS_CONFIG,
         PUBLIC_DAYS,
         getUnlockedDays,
-        saveUnlockedDays,
         isDayLocked,
-        unlockDay,
-        getDayAccessStatus,
-        checkUnlockFromURL,
-        getAllDaysWithStatus,
-        resetAllUnlocks
+        getDayAccessStatus
     };
 }

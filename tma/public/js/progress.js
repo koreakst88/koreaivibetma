@@ -323,29 +323,6 @@ async function updateProgressBar() {
     }
 }
 
-async function processChecklists(dayId) {
-    try {
-        if (!DAYS_CONFIG[dayId]) {
-            return;
-        }
-
-        const progress = await getProgress();
-        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-
-        checkboxes.forEach((checkbox, index) => {
-            if (progress[dayId]?.checklists[index] === true) {
-                checkbox.checked = true;
-            }
-
-            checkbox.addEventListener('change', async (event) => {
-                await updateChecklist(dayId, index, event.target.checked);
-            });
-        });
-    } catch (error) {
-        console.error('Error processing checklists:', error);
-    }
-}
-
 async function getDayProgress(dayId) {
     try {
         if (!DAYS_CONFIG[dayId]) {
@@ -415,7 +392,6 @@ if (typeof module !== 'undefined' && module.exports) {
         updateChecklist,
         getTotalProgress,
         updateProgressBar,
-        processChecklists,
         getDayProgress,
         getDayChecklistStats,
         resetProgress
