@@ -16,15 +16,29 @@ let guidesInitialized = false;
 async function renderDays() {
     const container = document.getElementById('days-container');
     if (!container) return;
-    container.innerHTML = ''; // Очищаем контейнер перед рендерингом
+    if (typeof showLoader === 'function') {
+        showLoader('days-container');
+    }
 
-    // Получаем прогресс, если функция доступна
-    const progress = typeof getProgress === 'function' ? await getProgress() : {};
+    try {
+        const progress = typeof getProgress === 'function' ? await getProgress() : {};
+        const dayEntries = Object.entries(DAYS_CONFIG).filter(([dayId]) => dayId !== 'day-0');
 
-    await Promise.all(
-        Object.entries(DAYS_CONFIG)
-            .filter(([dayId]) => dayId !== 'day-0')
-            .map(async ([dayId, dayInfo]) => {
+        if (dayEntries.length === 0) {
+            if (typeof renderEmptyState === 'function') {
+                renderEmptyState('days-container', {
+                    icon: '📚',
+                    title: 'Дни курса загружаются...',
+                    subtitle: 'Список уроков появится здесь чуть позже.'
+                });
+            }
+            return;
+        }
+
+        container.innerHTML = '';
+
+        const dayCards = await Promise.all(
+            dayEntries.map(async ([dayId, dayInfo]) => {
                 const accessStatus = await getDayAccessStatus(dayId);
                 const isCompleted = progress[dayId]?.completed || false;
                 const displayTitle = COURSE_DAY_TITLES[dayId] || dayInfo.title;
@@ -55,13 +69,33 @@ async function renderDays() {
                     });
                 }
 
-                container.appendChild(card);
+                return card;
             })
-    );
+        );
 
-    // Обновляем прогресс-бар, если функция подключена
-    if (typeof updateProgressBar === 'function') {
-        await updateProgressBar();
+        dayCards.forEach((card) => {
+            container.appendChild(card);
+        });
+
+        if (typeof updateProgressBar === 'function') {
+            await updateProgressBar();
+        }
+    } catch (error) {
+        console.error('Ошибка рендера дней:', error);
+        if (typeof renderErrorState === 'function') {
+            renderErrorState('days-container', {
+                text: 'Не удалось загрузить данные',
+                buttonText: 'Попробовать снова',
+                buttonId: 'retry-days-load'
+            });
+            document.getElementById('retry-days-load')?.addEventListener('click', () => {
+                renderDays();
+            });
+        }
+    } finally {
+        if (typeof hideLoader === 'function') {
+            hideLoader('days-container');
+        }
     }
 }
 
@@ -165,9 +199,8 @@ async function promptUnlockCode(dayId) {
             showToast(`✅ ${result.message}`);
             await renderDays(); // Перерисовать список
         } else {
-            // Добавляем вибрацию при ошибке, если Telegram SDK подключен
-            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
-                window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+            if (window.Haptic?.error) {
+                window.Haptic.error();
             }
             showToast(`❌ ${result ? result.message : 'Неверный код'}`);
         }
@@ -290,6 +323,9 @@ function setupTabNavigation() {
 
         tab.addEventListener('click', (event) => {
             event.preventDefault();
+            if (window.Haptic?.selection) {
+                window.Haptic.selection();
+            }
             showAppSection(sectionId, tabId);
         });
     });

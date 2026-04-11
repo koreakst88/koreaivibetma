@@ -2238,3 +2238,209 @@ body.dark-theme.lesson-page .skeleton-line {
   flex-direction: column;
   gap: 12px;
 }
+
+/* 15. States and Loaders */
+.js-loader-root,
+.skeleton-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skeleton-line {
+  position: relative;
+  overflow: hidden;
+  height: 14px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #E5E7EB 0%, #F3F4F6 50%, #E5E7EB 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+.skeleton-line--short {
+  width: 42%;
+}
+
+.skeleton-line--medium {
+  width: 68%;
+}
+
+.skeleton-line--full {
+  width: 100%;
+}
+
+.skeleton-line--title {
+  width: 58%;
+  height: 16px;
+}
+
+.skeleton-line--text {
+  width: 36%;
+  height: 12px;
+}
+
+.skeleton-line--pill {
+  width: 44%;
+  height: 34px;
+  border-radius: 999px;
+}
+
+.skeleton-line--hero-title {
+  width: 78%;
+  height: 34px;
+}
+
+.skeleton-line--hero-text {
+  width: 72%;
+  height: 14px;
+}
+
+.skeleton-line--hero-text-short {
+  width: 52%;
+  height: 14px;
+}
+
+.skeleton-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+}
+
+.skeleton-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: linear-gradient(90deg, #E5E7EB 0%, #F3F4F6 50%, #E5E7EB 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+.skeleton-card__content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skeleton-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+}
+
+.skeleton-button-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skeleton-button {
+  width: 100%;
+  height: 52px;
+  border-radius: var(--radius-button);
+  background: linear-gradient(90deg, #E5E7EB 0%, #F3F4F6 50%, #E5E7EB 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+}
+
+.empty-state__icon {
+  font-size: 64px;
+  line-height: 1;
+  margin-bottom: 14px;
+}
+
+.empty-state__title {
+  margin: 0 0 8px;
+}
+
+.empty-state__subtitle {
+  margin: 0 auto 16px;
+  max-width: 320px;
+}
+
+.empty-state__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.error-state {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  border-radius: var(--radius-card);
+  padding: 16px;
+}
+
+.error-state--inline {
+  margin-top: 8px;
+}
+
+.error-state__icon {
+  font-size: 24px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.error-state__content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.error-state__text {
+  margin: 0;
+  color: #991B1B;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.error-state__button {
+  width: auto;
+}
+
+.locked-state {
+  text-align: center;
+  padding: 28px 20px;
+}
+
+.locked-state .day-locked-block__icon {
+  font-size: 48px;
+}
+
+.day-complete-block,
+.quiz-result,
+.next-step-card {
+  animation: fadeInUp 0.35s ease both;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

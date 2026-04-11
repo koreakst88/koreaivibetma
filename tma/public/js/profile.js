@@ -1,6 +1,22 @@
 // tma/public/js/profile.js
 
 (function () {
+    let profileSectionTemplate = '';
+
+    function cacheProfileTemplate() {
+        const section = document.getElementById('profile-section');
+        if (section && !profileSectionTemplate) {
+            profileSectionTemplate = section.innerHTML;
+        }
+    }
+
+    function ensureProfileMarkup() {
+        const section = document.getElementById('profile-section');
+        if (section && profileSectionTemplate && !section.querySelector('#profile-user-card')) {
+            section.innerHTML = profileSectionTemplate;
+        }
+    }
+
     function getNormalizedProgress() {
         const source = window.userProgress;
 
@@ -168,6 +184,9 @@
         const openCourseBtn = document.getElementById('profile-open-course');
 
         const contactTeacherHandler = () => {
+            if (window.Haptic?.medium) {
+                window.Haptic.medium();
+            }
             if (window.Telegram?.WebApp?.openLink) {
                 window.Telegram.WebApp.openLink('https://t.me/koreakim88');
             } else {
@@ -198,7 +217,49 @@
         }
     }
 
-    function initProfile() {
+    function renderProfileEmptyState() {
+        const section = document.getElementById('profile-section');
+        if (!section || typeof renderEmptyState !== 'function') return;
+
+        renderEmptyState('profile-section', {
+            icon: '👤',
+            title: 'Открой TMA через Telegram бота',
+            subtitle: 'Профиль появится, когда приложение откроется внутри Telegram.'
+        });
+    }
+
+    async function initProfile() {
+        cacheProfileTemplate();
+        if (typeof showLoader === 'function') {
+            showLoader('profile-section');
+        }
+
+        await Promise.resolve();
+
+        if (!window.currentTelegramUser) {
+            renderProfileEmptyState();
+            return;
+        }
+
+        if (!window.userAccess && !window.userProgress) {
+            if (typeof renderErrorState === 'function') {
+                renderErrorState('profile-section', {
+                    text: 'Не удалось загрузить данные',
+                    buttonText: 'Попробовать снова',
+                    buttonId: 'retry-profile-load'
+                });
+                document.getElementById('retry-profile-load')?.addEventListener('click', () => {
+                    initProfile();
+                });
+            }
+            return;
+        }
+
+        if (typeof hideLoader === 'function') {
+            hideLoader('profile-section');
+        }
+        ensureProfileMarkup();
+
         renderUserCard();
         renderProgressBlock();
         renderNextStep();

@@ -44,12 +44,6 @@
     let activeCheatsheetCategory = 'terminal';
     let guidesBootstrapped = false;
 
-    function vibrateLight() {
-        if (window.Telegram?.WebApp?.HapticFeedback) {
-            window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
-        }
-    }
-
     function safeTrack(eventName, props) {
         if (typeof trackEvent === 'function') {
             try {
@@ -71,7 +65,9 @@
     async function copyToClipboard(text, meta = {}) {
         try {
             await navigator.clipboard.writeText(text);
-            vibrateLight();
+            if (window.Haptic?.light) {
+                window.Haptic.light();
+            }
 
             if (meta.type === 'prompt') {
                 safeTrack('prompt_copied', { id: meta.id, category: meta.category });
@@ -113,7 +109,13 @@
         container.innerHTML = '';
 
         if (filteredPrompts.length === 0) {
-            container.innerHTML = '<div class="card text-secondary">Промпты для этой категории пока не найдены.</div>';
+            if (typeof renderEmptyState === 'function') {
+                renderEmptyState('guides-prompts-list', {
+                    icon: '🔍',
+                    title: 'Промпты не найдены',
+                    subtitle: 'Попробуйте выбрать другую категорию.'
+                });
+            }
             return;
         }
 
@@ -207,7 +209,13 @@
         container.innerHTML = '';
 
         if (!section?.items?.length) {
-            container.innerHTML = '<div class="card text-secondary">Раздел пока пуст.</div>';
+            if (typeof renderEmptyState === 'function') {
+                renderEmptyState('guides-cheatsheets-list', {
+                    icon: '📎',
+                    title: 'Шпаргалки не найдены',
+                    subtitle: 'Раздел пока пуст.'
+                });
+            }
             return;
         }
 
@@ -269,7 +277,9 @@
                     </div>
                 `;
                 card.addEventListener('click', () => {
-                    vibrateLight();
+                    if (window.Haptic?.light) {
+                        window.Haptic.light();
+                    }
                     openGuideLink(item.url);
                 });
                 groupBlock.appendChild(card);
@@ -297,6 +307,10 @@
             fetch('data/cheatsheets.json')
         ]);
 
+        if (!promptsResponse.ok || !cheatsheetsResponse.ok) {
+            throw new Error('Не удалось получить JSON для гайдов');
+        }
+
         promptsData = await promptsResponse.json();
         cheatsheetsData = await cheatsheetsResponse.json();
     }
@@ -314,15 +328,30 @@
             return;
         }
 
-        await loadGuidesData();
-        bindGuideTabs();
-        renderPromptFilters();
-        renderPrompts();
-        renderCheatsheetFilters();
-        renderCheatsheets();
-        renderLinks();
-        switchGuideTab('prompts');
-        guidesBootstrapped = true;
+        try {
+            await loadGuidesData();
+            bindGuideTabs();
+            renderPromptFilters();
+            renderPrompts();
+            renderCheatsheetFilters();
+            renderCheatsheets();
+            renderLinks();
+            switchGuideTab('prompts');
+            guidesBootstrapped = true;
+        } catch (error) {
+            console.error('Guides init error:', error);
+            if (typeof renderErrorState === 'function') {
+                renderErrorState('guides-prompts-list', {
+                    text: 'Не удалось загрузить данные',
+                    buttonText: 'Попробовать снова',
+                    buttonId: 'retry-guides-load'
+                });
+                document.getElementById('retry-guides-load')?.addEventListener('click', async () => {
+                    guidesBootstrapped = false;
+                    await initGuides();
+                });
+            }
+        }
     }
 
     window.guidesApp = {

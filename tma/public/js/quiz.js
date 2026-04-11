@@ -72,14 +72,16 @@
     let hasSavedResult = false;
 
     function impact(type) {
-        if (window.Telegram?.WebApp?.HapticFeedback) {
-            window.Telegram.WebApp.HapticFeedback.impactOccurred(type);
+        if (type === 'light' && window.Haptic?.light) {
+            window.Haptic.light();
+        } else if (type === 'medium' && window.Haptic?.medium) {
+            window.Haptic.medium();
         }
     }
 
     function notifySuccess() {
-        if (window.Telegram?.WebApp?.HapticFeedback) {
-            window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+        if (window.Haptic?.success) {
+            window.Haptic.success();
         }
     }
 

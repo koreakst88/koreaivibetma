@@ -59,8 +59,8 @@ function updateLessonProgressUI() {
 
         completeBlock.style.display = isComplete ? '' : 'none';
 
-        if (isComplete && !wasVisible && window.Telegram?.WebApp?.HapticFeedback) {
-            window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+        if (isComplete && !wasVisible && window.Haptic?.success) {
+            window.Haptic.success();
         }
     }
 }
@@ -78,8 +78,15 @@ async function loadDayContent() {
         return;
     }
 
+    if (typeof showLoader === 'function') {
+        showLoader('day-content');
+    }
+
     // Проверка доступа из access.js
     if (typeof isDayLocked === 'function' && await isDayLocked(dayId)) {
+        if (typeof hideLoader === 'function') {
+            hideLoader('day-content');
+        }
         showLockedMessage();
         document.getElementById('day-title').textContent = 'Доступ закрыт';
         setDayStatusBadge('Закрыт', 'locked');
@@ -146,6 +153,9 @@ async function loadDayContent() {
         // Рендерим через marked.js
         const html = marked.parse(markdown);
         container.innerHTML = html;
+        if (typeof hideLoader === 'function') {
+            hideLoader('day-content');
+        }
         setDayStatusBadge('Урок', 'default');
 
         // Инициализируем чек-листы после рендеринга Markdown
@@ -195,23 +205,26 @@ async function loadDayContent() {
             }, 1000);
         }
 
-        // Посылаем легкую вибрацию
-        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
-            window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+        if (window.Haptic?.light) {
+            window.Haptic.light();
         }
 
     } catch (err) {
         console.error('Ошибка загрузки контента:', err);
-        container.innerHTML = `
-            <div class="text-center py-10">
-                <div class="text-4xl mb-4 text-red-400">⚠️</div>
-                <h2 class="text-xl font-bold text-gray-800 mb-2">Ошибка загрузки файла</h2>
-                <p class="text-gray-500 mb-6">Не удалось загрузить материалы для этого дня. Убедитесь, что файл content/${dayId}.md существует.</p>
-                <button onclick="goBack()" class="bg-gray-200 text-gray-800 font-semibold px-6 py-2 rounded-lg hover:bg-gray-300 transition-colors">
-                    Назад
-                </button>
-            </div>
-        `;
+        if (typeof renderErrorState === 'function') {
+            renderErrorState('day-content', {
+                text: 'Не удалось загрузить данные',
+                buttonText: 'Попробовать снова',
+                buttonId: 'retry-day-content',
+                inline: true
+            });
+            document.getElementById('retry-day-content')?.addEventListener('click', () => {
+                loadDayContent();
+            });
+        }
+        if (window.Haptic?.error) {
+            window.Haptic.error();
+        }
     }
 }
 
@@ -246,9 +259,8 @@ async function initChecklists(dayId) {
             updateChecklistVisualState();
             updateLessonProgressUI();
 
-            // Легкая вибрация в Telegram при клике
-            if (window.Telegram?.WebApp) {
-                window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+            if (window.Haptic?.light) {
+                window.Haptic.light();
             }
         });
     });
@@ -332,8 +344,8 @@ async function setupNavigation(currentDayId) {
         if (!isLocked) {
             nextBtn.classList.remove('hidden');
             nextBtn.onclick = () => {
-                if (window.Telegram?.WebApp?.HapticFeedback) {
-                    window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+                if (window.Haptic?.medium) {
+                    window.Haptic.medium();
                 }
 
                 window.location.href = `day.html?id=${nextId}`;
