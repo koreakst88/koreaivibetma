@@ -258,22 +258,18 @@
 
             <section id="profile-section" class="content-section" style="display:none">
                 <div class="section-heading">
-                    <p class="section-kicker">Профиль</p>
                     <h2>Профиль</h2>
-                    <p class="text-secondary">Ваши материалы, навигация по курсу и связь с преподавателем всегда под рукой.</p>
                 </div>
 
-                <div class="profile-card card">
-                    <div class="profile-card__top">
-                        <div class="user-avatar-shell user-avatar-shell--large" aria-hidden="true">
-                            <img class="user-avatar-image" alt="Аватар пользователя">
-                            <div class="user-avatar-fallback">В</div>
-                        </div>
+                <div id="profile-user-card" class="profile-user-card card"></div>
+                <div id="profile-progress-block" class="card"></div>
+                <div id="profile-next-step" class="next-step-card card"></div>
 
-                        <div class="profile-card__copy">
-                            <h3>Ваш учебный маршрут</h3>
-                            <p class="text-secondary">Все материалы и прогресс сохраняются внутри Mini App.</p>
-                        </div>
+                <div class="support-block card">
+                    <h3>Поддержка</h3>
+                    <div class="support-block__actions">
+                        <button id="profile-contact-btn" class="btn-primary" type="button">Написать преподавателю</button>
+                        <button id="profile-course-btn" class="btn-secondary" type="button">Перейти к курсу</button>
                     </div>
                 </div>
             </section>
@@ -330,6 +326,7 @@
     <script src="js/supabase.js"></script>
     <script src="js/quiz.js"></script>
     <script src="js/guides.js"></script>
+    <script src="js/profile.js"></script>
     <script src="js/app.js"></script>
 
 </body>

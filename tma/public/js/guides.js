@@ -124,8 +124,10 @@
                 <div class="prompt-card__top">
                     <div class="prompt-card__meta">
                         <h3>${item.title}</h3>
-                        <span class="prompt-category-badge">${item.category}</span>
                     </div>
+                </div>
+                <div class="prompt-card__actions">
+                    <span class="prompt-category-badge">${item.category}</span>
                     <button class="copy-btn" type="button">Копировать</button>
                 </div>
                 <button class="prompt-card__toggle" type="button" aria-expanded="false">

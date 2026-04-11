@@ -261,6 +261,10 @@ function showAppSection(sectionId, activeTabId) {
         }
     }
 
+    if (sectionId === 'profile-section' && typeof initProfile === 'function') {
+        initProfile();
+    }
+
     if (typeof setupBackButton === 'function' && isChromeHidden) {
         setupBackButton(() => {
             showAppSection('home-section', 'tab-home');
