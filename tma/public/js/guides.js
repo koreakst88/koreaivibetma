@@ -136,8 +136,7 @@
                     <span class="prompt-category-badge">${item.category}</span>
                     <button class="copy-btn" type="button">Копировать</button>
                 </div>
-                <button class="prompt-card__toggle" type="button" aria-expanded="false">
-                    <span>Показать промпт</span>
+                <button class="prompt-card__toggle" type="button" aria-expanded="false" aria-label="Открыть промпт">
                     <span class="prompt-card__chevron">↓</span>
                 </button>
                 <div class="prompt-card__body" style="display:none">
@@ -152,7 +151,7 @@
             toggleButton.addEventListener('click', () => {
                 const isOpen = toggleButton.getAttribute('aria-expanded') === 'true';
                 toggleButton.setAttribute('aria-expanded', String(!isOpen));
-                toggleButton.querySelector('span').textContent = isOpen ? 'Показать промпт' : 'Скрыть промпт';
+                toggleButton.setAttribute('aria-label', isOpen ? 'Открыть промпт' : 'Скрыть промпт');
                 body.style.display = isOpen ? 'none' : '';
                 card.classList.toggle('prompt-card--expanded', !isOpen);
 
