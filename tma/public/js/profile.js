@@ -3,6 +3,16 @@
 (function () {
     let profileSectionTemplate = '';
 
+    function trackProfileEvent(name, props = {}) {
+        if (typeof trackEvent === 'function') {
+            try {
+                trackEvent(name, props);
+            } catch (error) {
+                console.warn(`[Analytics] ${name} error:`, error);
+            }
+        }
+    }
+
     function cacheProfileTemplate() {
         const section = document.getElementById('profile-section');
         if (section && !profileSectionTemplate) {
@@ -187,6 +197,9 @@
             if (window.Haptic?.medium) {
                 window.Haptic.medium();
             }
+            trackProfileEvent('contact_clicked', {
+                source: 'profile'
+            });
             if (window.Telegram?.WebApp?.openLink) {
                 window.Telegram.WebApp.openLink('https://t.me/koreakim88');
             } else {
@@ -265,13 +278,17 @@
         renderNextStep();
         bindProfileActions();
 
-        if (typeof trackEvent === 'function') {
-            try {
-                trackEvent('profile_viewed');
-            } catch (error) {
-                console.warn('[Analytics] profile error:', error);
-            }
-        }
+        const progress = getNormalizedProgress();
+        const completedDaysCount = Object.entries(DAYS_CONFIG)
+            .filter(([dayId]) => dayId !== 'day-0')
+            .filter(([dayId]) => progress[dayId]?.completed === true)
+            .length;
+
+        trackProfileEvent('profile_viewed', {
+            access_type: window.userAccess?.access_type,
+            max_day: window.userAccess?.max_day,
+            completed_days: completedDaysCount
+        });
     }
 
     window.profileApp = {

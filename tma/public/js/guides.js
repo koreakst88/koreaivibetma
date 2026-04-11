@@ -70,7 +70,11 @@
             }
 
             if (meta.type === 'prompt') {
-                safeTrack('prompt_copied', { id: meta.id, category: meta.category });
+                safeTrack('prompt_copied', {
+                    prompt_id: meta.id,
+                    prompt_title: meta.title,
+                    category: meta.category
+                });
             }
 
             return true;
@@ -151,6 +155,13 @@
                 toggleButton.querySelector('span').textContent = isOpen ? 'Показать промпт' : 'Скрыть промпт';
                 body.style.display = isOpen ? 'none' : '';
                 card.classList.toggle('prompt-card--expanded', !isOpen);
+
+                if (!isOpen) {
+                    safeTrack('prompt_viewed', {
+                        prompt_id: item.id,
+                        category: item.category
+                    });
+                }
             });
 
             copyButton.addEventListener('click', async (event) => {
@@ -158,6 +169,7 @@
                 const copied = await copyToClipboard(item.prompt, {
                     type: 'prompt',
                     id: item.id,
+                    title: item.title,
                     category: item.category
                 });
 
@@ -289,7 +301,8 @@
         });
     }
 
-    function switchGuideTab(tab) {
+    function switchGuideTab(tab, options = {}) {
+        const shouldTrack = options.track !== false;
         activeGuideTab = tab;
 
         document.querySelectorAll('.guides-panel').forEach((panel) => {
@@ -299,6 +312,12 @@
         document.querySelectorAll('#guides-section > .guides-tabs .guide-tab').forEach((button) => {
             button.classList.toggle('active', button.dataset.tab === tab);
         });
+
+        if (shouldTrack) {
+            safeTrack('guides_tab_switched', {
+                tab
+            });
+        }
     }
 
     async function loadGuidesData() {
@@ -336,7 +355,7 @@
             renderCheatsheetFilters();
             renderCheatsheets();
             renderLinks();
-            switchGuideTab('prompts');
+            switchGuideTab('prompts', { track: false });
             guidesBootstrapped = true;
         } catch (error) {
             console.error('Guides init error:', error);
@@ -358,7 +377,12 @@
         initGuides,
         switchGuideTab,
         filterPrompts,
-        copyToClipboard
+        copyToClipboard,
+        onSectionViewed() {
+            safeTrack('guides_viewed', {
+                tab: activeGuideTab
+            });
+        }
     };
 
     window.initGuides = initGuides;

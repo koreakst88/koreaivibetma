@@ -12,6 +12,16 @@ const COURSE_DAY_TITLES = {
 
 let guidesInitialized = false;
 
+function trackAppEvent(name, props = {}) {
+    if (typeof trackEvent === 'function') {
+        try {
+            trackEvent(name, props);
+        } catch (error) {
+            console.warn(`[Analytics] ${name} error:`, error);
+        }
+    }
+}
+
 async function renderDays() {
     const container = document.getElementById('days-container');
     if (!container) return;
@@ -54,15 +64,33 @@ async function renderDays() {
                     <div class="day-card__status">${statusIcon}</div>
                 `;
 
-                if (!accessStatus.locked) {
+                if (accessStatus.locked) {
+                    card.style.pointerEvents = 'auto';
+                    card.addEventListener('click', () => {
+                        trackAppEvent('day_locked_clicked', {
+                            day_id: dayId,
+                            day_number: dayInfo.order
+                        });
+                    });
+                } else {
                     card.setAttribute('role', 'link');
                     card.setAttribute('tabindex', '0');
                     card.addEventListener('click', () => {
+                        trackAppEvent('day_opened', {
+                            day_id: dayId,
+                            day_number: dayInfo.order,
+                            day_title: displayTitle
+                        });
                         window.location.href = `day.html?id=${dayId}`;
                     });
                     card.addEventListener('keydown', (event) => {
                         if (event.key === 'Enter' || event.key === ' ') {
                             event.preventDefault();
+                            trackAppEvent('day_opened', {
+                                day_id: dayId,
+                                day_number: dayInfo.order,
+                                day_title: displayTitle
+                            });
                             window.location.href = `day.html?id=${dayId}`;
                         }
                     });
@@ -174,17 +202,30 @@ function showAppSection(sectionId, activeTabId) {
                 });
         }
 
-        if (typeof trackEvent === 'function') {
-            try {
-                trackEvent('guides_viewed');
-            } catch (error) {
-                console.warn('[Analytics] Ошибка трекинга guides_viewed:', error);
-            }
+        if (window.guidesApp?.onSectionViewed) {
+            window.guidesApp.onSectionViewed();
         }
     }
 
     if (sectionId === 'profile-section' && typeof initProfile === 'function') {
         initProfile();
+    }
+
+    if (sectionId === 'home-section') {
+        trackAppEvent('home_viewed', {
+            has_access: window.userAccess?.access_type,
+            max_day: window.userAccess?.max_day
+        });
+    }
+
+    if (sectionId === 'course-section') {
+        trackAppEvent('course_viewed', {
+            max_day: window.userAccess?.max_day
+        });
+    }
+
+    if (sectionId === 'about-section') {
+        trackAppEvent('about_viewed');
     }
 
     if (typeof setupBackButton === 'function' && isChromeHidden) {
@@ -200,13 +241,13 @@ function showAppSection(sectionId, activeTabId) {
 
 function setupTabNavigation() {
     const tabBindings = [
-        ['tab-home', 'home-section'],
-        ['tab-course', 'course-section'],
-        ['tab-guides', 'guides-section'],
-        ['tab-profile', 'profile-section']
+        ['tab-home', 'home-section', 'home'],
+        ['tab-course', 'course-section', 'course'],
+        ['tab-guides', 'guides-section', 'guides'],
+        ['tab-profile', 'profile-section', 'profile']
     ];
 
-    tabBindings.forEach(([tabId, sectionId]) => {
+    tabBindings.forEach(([tabId, sectionId, tabName]) => {
         const tab = document.getElementById(tabId);
         if (!tab) return;
 
@@ -215,6 +256,9 @@ function setupTabNavigation() {
             if (window.Haptic?.selection) {
                 window.Haptic.selection();
             }
+            trackAppEvent('tab_switched', {
+                tab: tabName
+            });
             showAppSection(sectionId, tabId);
         });
     });
@@ -232,14 +276,58 @@ function setupTabNavigation() {
 
         trigger.addEventListener('click', (event) => {
             event.preventDefault();
+
+            if (triggerId === 'btn-about') {
+                trackAppEvent('cta_about_clicked', { source: 'hero' });
+            }
+
+            if (triggerId === 'card-quiz') {
+                trackAppEvent('cta_quiz_clicked', { source: 'home_card' });
+            }
+
+            if (triggerId === 'card-continue') {
+                trackAppEvent('cta_continue_clicked', { source: 'home_card' });
+            }
+
             showAppSection(sectionId, tabId);
         });
     });
+
+    const startLessonButton = document.getElementById('btn-start-lesson');
+    if (startLessonButton) {
+        startLessonButton.addEventListener('click', () => {
+            trackAppEvent('cta_start_lesson_clicked', { source: 'hero' });
+        });
+    }
 
     const aboutBack = document.getElementById('about-back');
     if (aboutBack) {
         aboutBack.addEventListener('click', () => {
             showAppSection('home-section', 'tab-home');
+        });
+    }
+
+    document.querySelectorAll('.social-pill').forEach((link) => {
+        link.addEventListener('click', () => {
+            const label = link.querySelector('.social-pill__label')?.textContent?.toLowerCase() || '';
+            const platformMap = {
+                tiktok: 'tiktok',
+                instagram: 'instagram',
+                telegram: 'telegram'
+            };
+
+            trackAppEvent('social_clicked', {
+                platform: platformMap[label] || label
+            });
+        });
+    });
+
+    const aboutContactButton = document.querySelector('.about-contact-button');
+    if (aboutContactButton) {
+        aboutContactButton.addEventListener('click', () => {
+            trackAppEvent('contact_clicked', {
+                source: 'about'
+            });
         });
     }
 

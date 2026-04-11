@@ -11,6 +11,18 @@ document.addEventListener('DOMContentLoaded', function() {
     } catch(e) {}
 });
 
+let currentLessonDayId = null;
+
+function trackLessonEvent(name, props = {}) {
+    if (typeof trackEvent === 'function') {
+        try {
+            trackEvent(name, props);
+        } catch (error) {
+            console.warn(`[Analytics] ${name} error:`, error);
+        }
+    }
+}
+
 function setDayStatusBadge(text, state = 'default') {
     const badge = document.getElementById('day-status-badge');
     if (!badge) return;
@@ -62,6 +74,13 @@ function updateLessonProgressUI() {
         if (isComplete && !wasVisible && window.Haptic?.success) {
             window.Haptic.success();
         }
+
+        if (isComplete && !wasVisible && currentLessonDayId && DAYS_CONFIG[currentLessonDayId]) {
+            trackLessonEvent('lesson_completed', {
+                day_id: currentLessonDayId,
+                day_number: DAYS_CONFIG[currentLessonDayId].order
+            });
+        }
     }
 }
 
@@ -104,15 +123,11 @@ async function loadDayContent() {
         document.getElementById('day-title').textContent = dayTitle;
     }
 
-    // Событие: пользователь открыл день
-    if (typeof trackEvent === 'function') {
-        setTimeout(() => {
-            trackEvent('day_opened', {
-                day_id: dayId,
-                day_title: dayTitle,
-            });
-        }, 1000);
-    }
+    currentLessonDayId = dayId;
+    trackLessonEvent('lesson_started', {
+        day_id: dayId,
+        day_number: DAYS_CONFIG[dayId]?.order ?? null
+    });
 
     try {
         // Загрузка markdown
@@ -184,25 +199,12 @@ async function loadDayContent() {
             });
         });
 
-        // Навешиваем трекинг на чек-боксы после initChecklists
-        _trackChecklistEvents(dayId, dayTitle);
-
         // Если загрузка успешна, вычисляем кнопки навигации
         await setupNavigation(dayId);
 
         // Отмечаем день как пройденный (если функция доступна)
         if (typeof markDayCompleted === 'function') {
             await markDayCompleted(dayId);
-        }
-
-        // Событие: день завершён (контент загружен и отмечен как пройденный)
-        if (typeof trackEvent === 'function') {
-            setTimeout(() => {
-                trackEvent('day_completed', {
-                    day_id: dayId,
-                    day_title: dayTitle,
-                });
-            }, 1000);
         }
 
         if (window.Haptic?.light) {
@@ -259,6 +261,17 @@ async function initChecklists(dayId) {
             updateChecklistVisualState();
             updateLessonProgressUI();
 
+            const allCheckboxes = Array.from(document.querySelectorAll('#day-content input[type="checkbox"]'));
+            const checkedCount = allCheckboxes.filter((checkbox) => checkbox.checked).length;
+
+            trackLessonEvent('checklist_item_checked', {
+                day_id: dayId,
+                item_index: index,
+                checked: cb.checked,
+                total_checked: checkedCount,
+                total_items: allCheckboxes.length
+            });
+
             if (window.Haptic?.light) {
                 window.Haptic.light();
             }
@@ -267,48 +280,6 @@ async function initChecklists(dayId) {
 
     updateChecklistVisualState();
     updateLessonProgressUI();
-}
-
-/**
- * Навешивает трекинг событий на чек-боксы дня.
- * Вызывается после initChecklists, чтобы чек-боксы уже были в DOM.
- * @param {string} dayId
- * @param {string} dayTitle
- */
-function _trackChecklistEvents(dayId, dayTitle) {
-    try {
-        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-        if (checkboxes.length === 0) return;
-
-        checkboxes.forEach((checkbox, index) => {
-            checkbox.addEventListener('change', function () {
-                if (!this.checked) return; // трекаем только отметку (не снятие)
-
-                try {
-                    // Считаем, сколько чек-боксов отмечено
-                    const total = checkboxes.length;
-                    const completed = Array.from(checkboxes).filter(cb => cb.checked).length;
-
-                    // Событие: отмечен один чек-бокс
-                    if (typeof trackEvent === 'function') {
-                        setTimeout(() => {
-                            trackEvent('checklist_completed', {
-                                day_id: dayId,
-                                day_title: dayTitle,
-                                checkbox_index: index,
-                                completed_count: completed,
-                                total_count: total,
-                            });
-                        }, 1000);
-                    }
-                } catch (err) {
-                    console.warn('[Analytics] Ошибка трекинга чек-листа:', err);
-                }
-            });
-        });
-    } catch (err) {
-        console.warn('[Analytics] _trackChecklistEvents ошибка:', err);
-    }
 }
 
 // 2. Навигация внизу страницы

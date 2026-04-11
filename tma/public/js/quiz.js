@@ -71,6 +71,16 @@
     let selectedAnswers = [];
     let hasSavedResult = false;
 
+    function trackQuizEvent(name, props = {}) {
+        if (typeof trackEvent === 'function') {
+            try {
+                trackEvent(name, props);
+            } catch (error) {
+                console.warn(`[Analytics] ${name} error:`, error);
+            }
+        }
+    }
+
     function impact(type) {
         if (type === 'light' && window.Haptic?.light) {
             window.Haptic.light();
@@ -159,6 +169,10 @@
 
     function selectAnswer(questionIndex, answerIndex) {
         selectedAnswers[questionIndex] = answerIndex;
+        trackQuizEvent('quiz_answered', {
+            question_index: questionIndex,
+            answer_index: answerIndex
+        });
         impact('light');
         renderQuestion(questionIndex);
     }
@@ -208,10 +222,29 @@
             <h2>${result.title}</h2>
             <p>${result.text}</p>
             <div class="quiz-result__actions">
-                <a class="btn-primary" href="day.html?id=day-0">Начать бесплатный урок</a>
-                <a class="btn-secondary" href="https://t.me/koreakim88" target="_blank" rel="noopener noreferrer">Связаться с преподавателем</a>
+                <a id="quiz-result-start" class="btn-primary" href="day.html?id=day-0">Начать бесплатный урок</a>
+                <a id="quiz-result-contact" class="btn-secondary" href="https://t.me/koreakim88" target="_blank" rel="noopener noreferrer">Связаться с преподавателем</a>
             </div>
         `;
+
+        trackQuizEvent('quiz_completed', {
+            result_type: result.type,
+            answers_count: selectedAnswers.length
+        });
+
+        resultScreen.querySelector('#quiz-result-start')?.addEventListener('click', () => {
+            trackQuizEvent('quiz_cta_clicked', {
+                result_type: result.type,
+                cta: 'start_lesson'
+            });
+        });
+
+        resultScreen.querySelector('#quiz-result-contact')?.addEventListener('click', () => {
+            trackQuizEvent('quiz_cta_clicked', {
+                result_type: result.type,
+                cta: 'contact'
+            });
+        });
 
         if (!hasSavedResult) {
             hasSavedResult = true;
@@ -250,6 +283,9 @@
     }
 
     function openQuiz() {
+        trackQuizEvent('quiz_started', {
+            source: 'home_card'
+        });
         resetQuiz();
     }
 
