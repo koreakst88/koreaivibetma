@@ -306,7 +306,9 @@ function showLockedMessage() {
 document.addEventListener('DOMContentLoaded', () => {
     // Вызов функции setupBackButton из telegram.js (чтобы показать стрелочку в тулбаре TG)
     if (typeof setupBackButton === 'function') {
-        setupBackButton();
+        setupBackButton(() => {
+            goBack();
+        });
     }
 
     // Запускаем основной цикл

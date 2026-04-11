@@ -190,5 +190,9 @@ document.addEventListener('DOMContentLoaded', () => {
     loadCheatsheets();
 
     // Настраиваем кнопку "Назад" в Telegram
-    if (typeof setupBackButton === 'function') setupBackButton();
+    if (typeof setupBackButton === 'function') {
+        setupBackButton(() => {
+            goBack();
+        });
+    }
 });

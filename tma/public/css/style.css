@@ -881,6 +881,10 @@ html {
   overscroll-behavior: none;
 }
 
+.tg-webapp .native-back-button {
+  display: none !important;
+}
+
 /* Для скрытия стандартного скроллбара в табах, но сохранения функционала */
 .scrollbar-hide::-webkit-scrollbar {
     display: none;

@@ -2,6 +2,7 @@
 
 // 1. Инициализация Telegram WebApp
 const tg = window.Telegram.WebApp;
+let currentBackButtonHandler = null;
 
 // Разворачиваем приложение на весь экран телефона и сообщаем, что готовы работать
 tg.ready();
@@ -34,15 +35,27 @@ function applyTelegramTheme() {
     root.style.setProperty('--tg-button-text', tg.themeParams.button_text_color || '#ffffff');
 }
 
-// 3. Функция setupBackButton()
-// Показываем кнопку "Назад" в шапке Telegram и обрабатываем клик
-function setupBackButton() {
+// 3. Управление нативной кнопкой "Назад" Telegram
+function clearTelegramBackButton() {
+    if (currentBackButtonHandler) {
+        tg.BackButton.offClick(currentBackButtonHandler);
+        currentBackButtonHandler = null;
+    }
+
+    tg.BackButton.hide();
+}
+
+function setupBackButton(onBack) {
+    clearTelegramBackButton();
+
+    currentBackButtonHandler = typeof onBack === 'function'
+        ? onBack
+        : () => {
+            window.location.href = 'index.html';
+        };
+
+    tg.BackButton.onClick(currentBackButtonHandler);
     tg.BackButton.show();
-    tg.BackButton.onClick(() => {
-        // Мы уже на index.html не должны её показывать, 
-        // но здесь она настроена для работы на внутренних страницах
-        window.location.href = 'index.html';
-    });
 }
 
 // 4. Функция contactTeacher()
@@ -64,6 +77,8 @@ function vibrate(type = 'light') {
 
 // 6. Автоматический вызов при загрузке
 applyTelegramTheme();
+document.body.classList.add('tg-webapp');
+clearTelegramBackButton();
 
 // Также подписываемся на события изменения темы пользователем в самом Telegram, 
 // чтобы всё менялось мгновенно

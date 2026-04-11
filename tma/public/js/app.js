@@ -242,6 +242,14 @@ function showAppSection(sectionId, activeTabId) {
 
     document.body.classList.toggle('about-open', isAboutSection);
 
+    if (typeof setupBackButton === 'function' && isAboutSection) {
+        setupBackButton(() => {
+            showAppSection('home-section', 'tab-home');
+        });
+    } else if (typeof clearTelegramBackButton === 'function') {
+        clearTelegramBackButton();
+    }
+
     window.scrollTo({ top: 0, behavior: 'auto' });
 }
 

@@ -189,7 +189,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Настройка кнопки назад
     if (typeof setupBackButton === 'function') {
-        setupBackButton();
+        setupBackButton(() => {
+            goBack();
+        });
     }
 
     // Слушатель для поиска
