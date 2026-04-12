@@ -106,6 +106,23 @@ body {
   letter-spacing: -0.04em;
 }
 
+.index-page .app-header.app-header--compact {
+  padding-top: 12px;
+  padding-bottom: 12px;
+  box-shadow: 0 6px 20px rgba(45, 77, 224, 0.05);
+}
+
+.index-page .app-header.app-header--compact .app-header__inner {
+  justify-content: flex-start;
+}
+
+.index-page .app-header.app-header--compact .app-header__title {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
 .index-page .main-content {
   padding-top: 92px;
   padding-bottom: 92px;
@@ -117,6 +134,16 @@ body {
   box-sizing: border-box;
   position: relative;
   z-index: 1;
+}
+
+.index-page .app-header.app-header--compact + .main-content {
+  padding-top: 74px;
+}
+
+body.index-page[data-app-section="course-section"] #course-section .course-section__header,
+body.index-page[data-app-section="guides-section"] #guides-section .section-heading,
+body.index-page[data-app-section="profile-section"] #profile-section .section-heading {
+  display: none;
 }
 
 .index-page .home-section {

@@ -12,6 +12,13 @@ const COURSE_DAY_TITLES = {
 
 let guidesInitialized = false;
 
+const APP_SECTION_HEADERS = {
+    'home-section': { title: 'greeting', compact: false, showAvatar: true },
+    'course-section': { title: 'Курс', compact: true, showAvatar: false },
+    'guides-section': { title: 'Гайды', compact: true, showAvatar: false },
+    'profile-section': { title: 'Профиль', compact: true, showAvatar: false }
+};
+
 function trackAppEvent(name, props = {}) {
     if (typeof trackEvent === 'function') {
         try {
@@ -158,6 +165,30 @@ function initializeUserProfile() {
     });
 }
 
+function updateAppHeader(sectionId) {
+    const header = document.querySelector('.app-header');
+    const title = document.getElementById('app-header-title');
+    const avatar = document.getElementById('app-header-avatar');
+    const displayName = window.currentTelegramUser?.first_name?.trim() || 'друг';
+    const config = APP_SECTION_HEADERS[sectionId] || APP_SECTION_HEADERS['home-section'];
+
+    if (!header || !title) {
+        return;
+    }
+
+    header.classList.toggle('app-header--compact', Boolean(config.compact));
+
+    if (config.title === 'greeting') {
+        title.innerHTML = `Привет, <span id="user-name">${displayName}</span>!`;
+    } else {
+        title.textContent = config.title;
+    }
+
+    if (avatar) {
+        avatar.style.display = config.showAvatar ? '' : 'none';
+    }
+}
+
 function showAppSection(sectionId, activeTabId) {
     const sectionIds = ['home-section', 'about-section', 'quiz-section', 'course-section', 'guides-section', 'profile-section'];
     const hiddenChromeSections = ['about-section', 'quiz-section'];
@@ -184,8 +215,13 @@ function showAppSection(sectionId, activeTabId) {
         appHeader.style.display = isChromeHidden ? 'none' : '';
     }
 
+    if (!isChromeHidden) {
+        updateAppHeader(sectionId);
+    }
+
     document.body.classList.toggle('about-open', sectionId === 'about-section');
     document.body.classList.toggle('quiz-open', sectionId === 'quiz-section');
+    document.body.dataset.appSection = sectionId;
 
     if (sectionId === 'quiz-section' && window.quizApp?.openQuiz) {
         window.quizApp.openQuiz();
