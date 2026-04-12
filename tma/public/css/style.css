@@ -1037,6 +1037,14 @@ input[type="checkbox"] {
   text-overflow: ellipsis;
 }
 
+.tg-webapp .lesson-header__inner {
+  grid-template-columns: 1fr auto;
+}
+
+.tg-webapp .lesson-header__title {
+  text-align: left;
+}
+
 .lesson-status-badge {
   justify-self: end;
   display: inline-flex;
