@@ -23,6 +23,21 @@ function trackLessonEvent(name, props = {}) {
     }
 }
 
+function getCompactDayHeaderTitle(dayId) {
+    const dayConfig = DAYS_CONFIG?.[dayId];
+    const dayOrder = dayConfig?.order;
+
+    if (dayId === 'day-0') {
+        return 'Первый урок';
+    }
+
+    if (typeof dayOrder === 'number' && dayOrder > 0) {
+        return `День ${dayOrder}`;
+    }
+
+    return dayConfig?.title || 'Урок';
+}
+
 function setDayStatusBadge(text, state = 'default') {
     const badge = document.getElementById('day-status-badge');
     if (!badge) return;
@@ -114,14 +129,15 @@ async function loadDayContent() {
 
     // Получаем заголовок дня для аналитики
     let dayTitle = `День #${dayId.replace('day', '')}`;
+    let headerTitle = getCompactDayHeaderTitle(dayId);
 
     // Присваиваем заголовок из конфигурации
     if (typeof DAYS_CONFIG !== 'undefined' && DAYS_CONFIG[dayId]) {
         dayTitle = DAYS_CONFIG[dayId].title;
-        document.getElementById('day-title').textContent = dayTitle;
-    } else {
-        document.getElementById('day-title').textContent = dayTitle;
+        headerTitle = getCompactDayHeaderTitle(dayId);
     }
+
+    document.getElementById('day-title').textContent = headerTitle;
 
     currentLessonDayId = dayId;
     trackLessonEvent('lesson_started', {
