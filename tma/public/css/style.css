@@ -1028,6 +1028,7 @@ input[type="checkbox"] {
 }
 
 .lesson-header__title {
+  min-width: 0;
   text-align: center;
   font-size: 17px;
   font-weight: 700;
