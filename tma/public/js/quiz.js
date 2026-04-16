@@ -3,67 +3,72 @@
 (function () {
     const QUIZ_QUESTIONS = [
         {
-            title: 'Есть ли у вас опыт программирования?',
+            title: 'Есть ли у вас опыт в разработке или создании digital-продуктов?',
             options: [
-                'Нет, полный новичок',
-                'Немного, базовый уровень',
-                'Да, есть опыт'
+                'Нет, я полный новичок',
+                'Немного пробовал(а)',
+                'Есть базовое понимание'
             ]
         },
         {
             title: 'Какая у вас главная цель?',
             options: [
-                'Создать свой продукт или стартап',
-                'Автоматизировать рабочие процессы',
-                'Освоить новую профессию',
-                'Просто попробовать что-то новое'
+                'Хочу научиться и попробовать новое',
+                'Хочу зарабатывать на этом',
+                'Хочу сделать проект для себя или бизнеса'
             ]
         },
         {
-            title: 'Сколько времени готовы уделять в неделю?',
+            title: 'Что вам ближе сейчас?',
             options: [
-                '1-2 часа',
-                '3-5 часов',
-                'Более 5 часов'
+                'Пошаговое объяснение с нуля',
+                'Быстрый результат и практика',
+                'Разобраться в инструментах и автоматизации'
             ]
         },
         {
-            title: 'Какой формат обучения вам ближе?',
+            title: 'Есть ли у вас уже идея проекта?',
             options: [
-                'Индивидуально с преподавателем',
-                'Самостоятельно по материалам',
-                'В группе с другими'
-            ]
-        },
-        {
-            title: 'Что для вас важнее всего в обучении?',
-            options: [
-                'Быстрый результат',
-                'Глубокое понимание',
-                'Практика и портфолио',
-                'Поддержка и обратная связь'
+                'Да, есть конкретная идея',
+                'Есть общее направление но нет деталей',
+                'Пока нет, только изучаю возможности'
             ]
         }
     ];
 
     const QUIZ_RESULTS = {
-        start: {
-            type: 'result_a',
+        beginner: {
+            type: 'beginner',
             icon: '🎯',
-            title: 'Отличный старт',
-            text: 'Этот курс создан именно для вас. Вы начнёте с нуля и создадите реальный проект.'
+            title: 'Вы в правильном месте',
+            text: 'Начнёте с нуля и выйдете с готовым прототипом. Никакого лишнего кода — только практика и результат.',
+            recommended: { label: 'Курс 7 уроков', href: 'https://t.me/koreaivibe_bot?start=course', badge: 'Рекомендуем' },
+            secondary: [
+                { label: 'Пакет 3 сессии', href: 'https://t.me/koreaivibe_bot?start=pack3' },
+                { label: 'Вайб-сессия', href: 'https://t.me/koreaivibe_bot?start=consult' }
+            ]
         },
-        fit: {
-            type: 'result_b',
+        explorer: {
+            type: 'explorer',
             icon: '✅',
-            title: 'Хороший выбор',
-            text: 'Ваш опыт поможет двигаться быстрее. Курс даст структуру и реальную практику.'
+            title: 'Самое время сделать первый реальный шаг',
+            text: 'У вас уже есть база — осталось направить её в нужную сторону. Работаем не по шаблону, а под конкретную задачу. От трёх сессий до реального проекта, а если захочется большего — всегда можно продолжить.',
+            recommended: { label: 'Пакет 3 сессии', href: 'https://t.me/koreaivibe_bot?start=pack3', badge: 'Рекомендуем' },
+            secondary: [
+                { label: 'Курс 7 уроков', href: 'https://t.me/koreaivibe_bot?start=course' },
+                { label: 'Вайб-сессия', href: 'https://t.me/koreaivibe_bot?start=consult' }
+            ]
         },
-        trial: {
-            type: 'result_c',
+        builder: {
+            type: 'builder',
             icon: '🎯',
-            title: 'Попробуйте бесплатно',
-            text: 'Начните с бесплатного урока и оцените формат сами.'
+            title: 'Ваш проект заслуживает экспертного подхода',
+            text: 'Работаю не по шаблону — разбираем вашу задачу, подключаю опыт в маркетинге и реализации нестандартных решений. Первая сессия это знакомство и погружение в проект, дальше двигаемся в вашем темпе — каждую сессию докупаете по необходимости.',
+            recommended: { label: 'Вайб-сессия', href: 'https://t.me/koreaivibe_bot?start=consult', badge: 'Рекомендуем' },
+            secondary: [
+                { label: 'Курс 7 уроков', href: 'https://t.me/koreaivibe_bot?start=course' },
+                { label: 'Пакет 3 сессии', href: 'https://t.me/koreaivibe_bot?start=pack3' }
+            ]
         }
     };
 
@@ -178,22 +183,25 @@
     }
 
     function calculateResult(answers) {
-        const experience = answers[0];
-        const format = answers[3];
+        const [q1, q2, q3, q4] = answers;
 
-        if (experience === 0 && format === 0) {
-            return QUIZ_RESULTS.start;
+        if (
+            q1 === 2 ||
+            (q2 === 2 && q4 === 0) ||
+            (q2 === 1 && q4 === 0)
+        ) {
+            return QUIZ_RESULTS.builder;
         }
 
-        if (experience === 1) {
-            return QUIZ_RESULTS.fit;
+        if (
+            q1 === 1 ||
+            q3 === 1 ||
+            q4 === 1
+        ) {
+            return QUIZ_RESULTS.explorer;
         }
 
-        if (experience === 2) {
-            return QUIZ_RESULTS.trial;
-        }
-
-        return QUIZ_RESULTS.fit;
+        return QUIZ_RESULTS.beginner;
     }
 
     async function saveQuizResult(result) {
@@ -215,15 +223,32 @@
             return;
         }
 
+        const recommendedCard = `
+            <div style="border:1px solid #7c3aed;border-radius:20px;padding:18px;text-align:left;display:flex;flex-direction:column;gap:14px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                    <strong style="font-size:18px;color:#0f172a;">${result.recommended.label}</strong>
+                    <span style="background:#7c3aed;color:#fff;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700;white-space:nowrap;">${result.recommended.badge}</span>
+                </div>
+                <button id="quiz-plan-primary" type="button" style="width:100%;border:none;border-radius:999px;background:#7c3aed;color:#fff;padding:14px 18px;font-size:15px;font-weight:700;cursor:pointer;">Начать</button>
+            </div>
+        `;
+
+        const secondaryCards = result.secondary.map((plan, index) => `
+            <div style="border:1px solid rgba(15,23,42,0.08);border-radius:20px;padding:18px;text-align:left;display:flex;flex-direction:column;gap:14px;">
+                <strong style="font-size:17px;color:#0f172a;">${plan.label}</strong>
+                <button id="quiz-plan-secondary-${index}" type="button" style="width:100%;border:1px solid rgba(15,23,42,0.16);border-radius:999px;background:transparent;color:#0f172a;padding:14px 18px;font-size:15px;font-weight:700;cursor:pointer;">Начать</button>
+            </div>
+        `).join('');
+
         questionScreen.style.display = 'none';
         resultScreen.style.display = '';
         resultScreen.innerHTML = `
             <div class="quiz-result__icon">${result.icon}</div>
             <h2>${result.title}</h2>
             <p>${result.text}</p>
-            <div class="quiz-result__actions">
-                <a id="quiz-result-start" class="btn-primary" href="day.html?id=day-0">Начать бесплатный урок</a>
-                <a id="quiz-result-contact" class="btn-secondary" href="https://t.me/koreakim88" target="_blank" rel="noopener noreferrer">Связаться с преподавателем</a>
+            <div class="quiz-result__actions" style="gap:14px;">
+                ${recommendedCard}
+                ${secondaryCards}
             </div>
         `;
 
@@ -232,17 +257,21 @@
             answers_count: selectedAnswers.length
         });
 
-        resultScreen.querySelector('#quiz-result-start')?.addEventListener('click', () => {
+        resultScreen.querySelector('#quiz-plan-primary')?.addEventListener('click', () => {
             trackQuizEvent('quiz_cta_clicked', {
                 result_type: result.type,
-                cta: 'start_lesson'
+                cta: 'recommended'
             });
+            window.location.href = result.recommended.href;
         });
 
-        resultScreen.querySelector('#quiz-result-contact')?.addEventListener('click', () => {
-            trackQuizEvent('quiz_cta_clicked', {
-                result_type: result.type,
-                cta: 'contact'
+        result.secondary.forEach((plan, index) => {
+            resultScreen.querySelector(`#quiz-plan-secondary-${index}`)?.addEventListener('click', () => {
+                trackQuizEvent('quiz_cta_clicked', {
+                    result_type: result.type,
+                    cta: plan.label
+                });
+                window.location.href = plan.href;
             });
         });
 
