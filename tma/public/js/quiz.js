@@ -1,6 +1,29 @@
 // tma/public/js/quiz.js
 
 (function () {
+    const PRICING_BY_REGION = {
+        RU: {
+            consult: '2 000 ₽',
+            pack3: '5 000 ₽',
+            course: '13 000 ₽'
+        },
+        KZ: {
+            consult: '15.000 ₸',
+            pack3: '35.000 ₸',
+            course: '80.000 ₸'
+        },
+        KR: {
+            consult: '40.000 ₩',
+            pack3: '90.000 ₩',
+            course: '250.000 ₩'
+        },
+        DEFAULT: {
+            consult: '$25',
+            pack3: '$60',
+            course: '$170'
+        }
+    };
+
     const QUIZ_QUESTIONS = [
         {
             title: 'Есть ли у вас опыт в разработке или создании digital-продуктов?',
@@ -42,10 +65,10 @@
             icon: '🎯',
             title: 'Вы в правильном месте',
             text: 'Начнёте с нуля и выйдете с готовым прототипом. Никакого лишнего кода — только практика и результат.',
-            recommended: { label: 'Курс 7 уроков', href: 'https://t.me/koreaivibe_bot?start=course', badge: 'Рекомендуем' },
+            recommended: { key: 'course', label: 'Курс 7 уроков', href: 'https://t.me/koreaivibe_bot?start=course', badge: 'Рекомендуем' },
             secondary: [
-                { label: 'Пакет 3 сессии', href: 'https://t.me/koreaivibe_bot?start=pack3' },
-                { label: 'Вайб-сессия', href: 'https://t.me/koreaivibe_bot?start=consult' }
+                { key: 'pack3', label: 'Пакет 3 сессии', href: 'https://t.me/koreaivibe_bot?start=pack3' },
+                { key: 'consult', label: 'Вайб-сессия', href: 'https://t.me/koreaivibe_bot?start=consult' }
             ]
         },
         explorer: {
@@ -53,10 +76,10 @@
             icon: '✅',
             title: 'Самое время сделать первый реальный шаг',
             text: 'У вас уже есть база — осталось направить её в нужную сторону. Работаем не по шаблону, а под конкретную задачу. От трёх сессий до реального проекта, а если захочется большего — всегда можно продолжить.',
-            recommended: { label: 'Пакет 3 сессии', href: 'https://t.me/koreaivibe_bot?start=pack3', badge: 'Рекомендуем' },
+            recommended: { key: 'pack3', label: 'Пакет 3 сессии', href: 'https://t.me/koreaivibe_bot?start=pack3', badge: 'Рекомендуем' },
             secondary: [
-                { label: 'Курс 7 уроков', href: 'https://t.me/koreaivibe_bot?start=course' },
-                { label: 'Вайб-сессия', href: 'https://t.me/koreaivibe_bot?start=consult' }
+                { key: 'course', label: 'Курс 7 уроков', href: 'https://t.me/koreaivibe_bot?start=course' },
+                { key: 'consult', label: 'Вайб-сессия', href: 'https://t.me/koreaivibe_bot?start=consult' }
             ]
         },
         builder: {
@@ -64,10 +87,10 @@
             icon: '🎯',
             title: 'Ваш проект заслуживает экспертного подхода',
             text: 'Работаю не по шаблону — разбираем вашу задачу, подключаю опыт в маркетинге и реализации нестандартных решений. Первая сессия это знакомство и погружение в проект, дальше двигаемся в вашем темпе — каждую сессию докупаете по необходимости.',
-            recommended: { label: 'Вайб-сессия', href: 'https://t.me/koreaivibe_bot?start=consult', badge: 'Рекомендуем' },
+            recommended: { key: 'consult', label: 'Вайб-сессия', href: 'https://t.me/koreaivibe_bot?start=consult', badge: 'Рекомендуем' },
             secondary: [
-                { label: 'Курс 7 уроков', href: 'https://t.me/koreaivibe_bot?start=course' },
-                { label: 'Пакет 3 сессии', href: 'https://t.me/koreaivibe_bot?start=pack3' }
+                { key: 'course', label: 'Курс 7 уроков', href: 'https://t.me/koreaivibe_bot?start=course' },
+                { key: 'pack3', label: 'Пакет 3 сессии', href: 'https://t.me/koreaivibe_bot?start=pack3' }
             ]
         }
     };
@@ -75,6 +98,9 @@
     let currentQuestionIndex = 0;
     let selectedAnswers = [];
     let hasSavedResult = false;
+    let pricingRegion = 'DEFAULT';
+    let pricingRegionLoaded = false;
+    let pricingRegionPromise = null;
 
     function trackQuizEvent(name, props = {}) {
         if (typeof trackEvent === 'function') {
@@ -98,6 +124,53 @@
         if (window.Haptic?.success) {
             window.Haptic.success();
         }
+    }
+
+    async function loadPricingRegion() {
+        if (pricingRegionLoaded) {
+            return pricingRegion;
+        }
+
+        if (pricingRegionPromise) {
+            return pricingRegionPromise;
+        }
+
+        pricingRegionPromise = (async () => {
+            try {
+                const response = await fetch('/api/geo', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Geo request failed: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const nextRegion = String(data?.pricingRegion || '').toUpperCase();
+
+                if (PRICING_BY_REGION[nextRegion]) {
+                    pricingRegion = nextRegion;
+                } else {
+                    pricingRegion = 'DEFAULT';
+                }
+            } catch (error) {
+                pricingRegion = 'DEFAULT';
+            } finally {
+                pricingRegionLoaded = true;
+            }
+
+            return pricingRegion;
+        })();
+
+        return pricingRegionPromise;
+    }
+
+    function getPriceByKey(planKey) {
+        const region = pricingRegion;
+        return PRICING_BY_REGION[region]?.[planKey] || PRICING_BY_REGION.DEFAULT[planKey] || '';
     }
 
     function getQuestionScreen() {
@@ -223,12 +296,16 @@
             return;
         }
 
+        await loadPricingRegion();
+
+        const recommendedPrice = getPriceByKey(result.recommended.key);
         const recommendedCard = `
             <div style="border:1px solid #7c3aed;border-radius:20px;padding:18px;text-align:left;display:flex;flex-direction:column;gap:14px;">
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
                     <strong style="font-size:18px;color:#0f172a;">${result.recommended.label}</strong>
                     <span style="background:#7c3aed;color:#fff;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700;white-space:nowrap;">${result.recommended.badge}</span>
                 </div>
+                <div style="font-size:28px;font-weight:800;line-height:1;color:#0f172a;">${recommendedPrice}</div>
                 <button id="quiz-plan-primary" type="button" style="width:100%;border:none;border-radius:999px;background:#7c3aed;color:#fff;padding:14px 18px;font-size:15px;font-weight:700;cursor:pointer;">Начать</button>
             </div>
         `;
@@ -236,6 +313,7 @@
         const secondaryCards = result.secondary.map((plan, index) => `
             <div style="border:1px solid rgba(15,23,42,0.08);border-radius:20px;padding:18px;text-align:left;display:flex;flex-direction:column;gap:14px;">
                 <strong style="font-size:17px;color:#0f172a;">${plan.label}</strong>
+                <div style="font-size:24px;font-weight:800;line-height:1;color:#0f172a;">${getPriceByKey(plan.key)}</div>
                 <button id="quiz-plan-secondary-${index}" type="button" style="width:100%;border:1px solid rgba(15,23,42,0.16);border-radius:999px;background:transparent;color:#0f172a;padding:14px 18px;font-size:15px;font-weight:700;cursor:pointer;">Начать</button>
             </div>
         `).join('');
@@ -311,10 +389,11 @@
         renderQuestion(0);
     }
 
-    function openQuiz() {
+    async function openQuiz() {
         trackQuizEvent('quiz_started', {
             source: 'home_card'
         });
+        await loadPricingRegion();
         resetQuiz();
     }
 
