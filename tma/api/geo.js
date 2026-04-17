@@ -9,7 +9,7 @@ module.exports = (req, res) => {
 
     const pricingRegion = pricingRegionMap[country] || 'DEFAULT';
 
-    res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=86400');
+    res.setHeader('Cache-Control', 'no-store');
     res.status(200).json({
         country: country || null,
         pricingRegion
