@@ -126,6 +126,58 @@
         }
     }
 
+    function inferPricingRegionFromTimezone() {
+        const timeZone = String(Intl.DateTimeFormat().resolvedOptions().timeZone || '').trim();
+
+        const kzTimezones = new Set([
+            'Asia/Almaty',
+            'Asia/Aqtau',
+            'Asia/Aqtobe',
+            'Asia/Atyrau',
+            'Asia/Oral',
+            'Asia/Qostanay',
+            'Asia/Qyzylorda'
+        ]);
+
+        const ruTimezones = new Set([
+            'Europe/Moscow',
+            'Europe/Kaliningrad',
+            'Europe/Samara',
+            'Europe/Volgograd',
+            'Europe/Astrakhan',
+            'Europe/Kirov',
+            'Europe/Saratov',
+            'Europe/Ulyanovsk',
+            'Asia/Yekaterinburg',
+            'Asia/Omsk',
+            'Asia/Novosibirsk',
+            'Asia/Barnaul',
+            'Asia/Tomsk',
+            'Asia/Krasnoyarsk',
+            'Asia/Irkutsk',
+            'Asia/Yakutsk',
+            'Asia/Vladivostok',
+            'Asia/Sakhalin',
+            'Asia/Magadan',
+            'Asia/Kamchatka',
+            'Asia/Anadyr'
+        ]);
+
+        if (timeZone === 'Asia/Seoul') {
+            return 'KR';
+        }
+
+        if (kzTimezones.has(timeZone)) {
+            return 'KZ';
+        }
+
+        if (ruTimezones.has(timeZone)) {
+            return 'RU';
+        }
+
+        return 'DEFAULT';
+    }
+
     async function loadPricingRegion() {
         if (pricingRegionLoaded) {
             return pricingRegion;
@@ -155,10 +207,10 @@
                 if (PRICING_BY_REGION[nextRegion]) {
                     pricingRegion = nextRegion;
                 } else {
-                    pricingRegion = 'DEFAULT';
+                    pricingRegion = inferPricingRegionFromTimezone();
                 }
             } catch (error) {
-                pricingRegion = 'DEFAULT';
+                pricingRegion = inferPricingRegionFromTimezone();
             } finally {
                 pricingRegionLoaded = true;
             }
