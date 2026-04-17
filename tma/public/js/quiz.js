@@ -139,6 +139,7 @@
             try {
                 const response = await fetch('/api/geo', {
                     method: 'GET',
+                    cache: 'no-store',
                     headers: {
                         'Accept': 'application/json'
                     }
