@@ -3,6 +3,17 @@ import { trackBotStart } from '../utils/analytics.js';
 import { trackEvent, setUserProperties } from '../utils/amplitude.js';
 import { registerUser } from '../utils/onboarding.js';
 
+function appendEntryParam(url, entry) {
+    try {
+        const nextUrl = new URL(url);
+        nextUrl.searchParams.set('entry', entry);
+        return nextUrl.toString();
+    } catch (error) {
+        const separator = url.includes('?') ? '&' : '?';
+        return `${url}${separator}entry=${encodeURIComponent(entry)}`;
+    }
+}
+
 export async function handleStart(ctx) {
     // Регистрируем пользователя для onboarding серии
     registerUser(ctx.from.id);
@@ -18,22 +29,22 @@ export async function handleStart(ctx) {
     trackEvent(ctx.from.id, 'bot_started');
 
     const tmaUrl = process.env.TMA_URL;
+    const quizUrl = appendEntryParam(tmaUrl, 'quiz');
+    const pricingUrl = appendEntryParam(tmaUrl, 'pricing');
 
     const keyboard = new InlineKeyboard()
-        .webApp('🚀 Открыть курс', tmaUrl);
+        .webApp('Подобрать формат', quizUrl)
+        .row()
+        .webApp('Посмотреть тарифы', pricingUrl);
 
     const message = `
-👋 Добро пожаловать в <b>Vibe Coding</b>!
+Ты здесь потому что хочешь делать продукты через AI — но пока не ясно как это работает на практике именно под твою задачу. Сейчас разберёмся 👋
 
-🎯 <b>Бесплатный доступ:</b>
-• День 0: Подготовка (90 мин)
-• Библиотека промптов
-• Шпаргалки и чек-листы
+🎁 Бесплатно уже доступно:
+- Вводный урок
+- Библиотека промптов и шпаргалки
 
-💎 <b>Полный курс (Дни 1-7):</b>
-Разблокируйте доступ с помощью кодов, которые вы получите от преподавателя.
-
-📱 Нажмите кнопку ниже, чтобы начать обучение!
+Выбери с чего начать:
     `.trim();
 
     await ctx.reply(message, {

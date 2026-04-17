@@ -1,6 +1,8 @@
 // tma/public/js/quiz.js
 
 (function () {
+    const CONTACT_URL = 'https://t.me/koreakim88';
+
     const PRICING_BY_REGION = {
         RU: {
             consult: '2 000 ₽',
@@ -65,10 +67,10 @@
             icon: '🎯',
             title: 'Вы в правильном месте',
             text: 'Начнёте с нуля и выйдете с готовым прототипом. Никакого лишнего кода — только практика и результат.',
-            recommended: { key: 'course', label: 'Курс 7 уроков', href: 'https://t.me/koreaivibe_bot?start=course', badge: 'Рекомендуем' },
+            recommended: { key: 'course', label: 'Курс 7 уроков', href: CONTACT_URL, badge: 'Рекомендуем' },
             secondary: [
-                { key: 'pack3', label: 'Пакет 3 сессии', href: 'https://t.me/koreaivibe_bot?start=pack3' },
-                { key: 'consult', label: 'Вайб-сессия', href: 'https://t.me/koreaivibe_bot?start=consult' }
+                { key: 'pack3', label: 'Пакет 3 сессии', href: CONTACT_URL },
+                { key: 'consult', label: 'Вайб-сессия', href: CONTACT_URL }
             ]
         },
         explorer: {
@@ -76,10 +78,10 @@
             icon: '✅',
             title: 'Самое время сделать первый реальный шаг',
             text: 'У вас уже есть база — осталось направить её в нужную сторону. Работаем не по шаблону, а под конкретную задачу. От трёх сессий до реального проекта, а если захочется большего — всегда можно продолжить.',
-            recommended: { key: 'pack3', label: 'Пакет 3 сессии', href: 'https://t.me/koreaivibe_bot?start=pack3', badge: 'Рекомендуем' },
+            recommended: { key: 'pack3', label: 'Пакет 3 сессии', href: CONTACT_URL, badge: 'Рекомендуем' },
             secondary: [
-                { key: 'course', label: 'Курс 7 уроков', href: 'https://t.me/koreaivibe_bot?start=course' },
-                { key: 'consult', label: 'Вайб-сессия', href: 'https://t.me/koreaivibe_bot?start=consult' }
+                { key: 'course', label: 'Курс 7 уроков', href: CONTACT_URL },
+                { key: 'consult', label: 'Вайб-сессия', href: CONTACT_URL }
             ]
         },
         builder: {
@@ -87,10 +89,10 @@
             icon: '🎯',
             title: 'Ваш проект заслуживает экспертного подхода',
             text: 'Работаю не по шаблону — разбираем вашу задачу, подключаю опыт в маркетинге и реализации нестандартных решений. Первая сессия это знакомство и погружение в проект, дальше двигаемся в вашем темпе — каждую сессию докупаете по необходимости.',
-            recommended: { key: 'consult', label: 'Вайб-сессия', href: 'https://t.me/koreaivibe_bot?start=consult', badge: 'Рекомендуем' },
+            recommended: { key: 'consult', label: 'Вайб-сессия', href: CONTACT_URL, badge: 'Рекомендуем' },
             secondary: [
-                { key: 'course', label: 'Курс 7 уроков', href: 'https://t.me/koreaivibe_bot?start=course' },
-                { key: 'pack3', label: 'Пакет 3 сессии', href: 'https://t.me/koreaivibe_bot?start=pack3' }
+                { key: 'course', label: 'Курс 7 уроков', href: CONTACT_URL },
+                { key: 'pack3', label: 'Пакет 3 сессии', href: CONTACT_URL }
             ]
         }
     };
@@ -234,6 +236,101 @@
         return document.getElementById('quiz-result');
     }
 
+    function getProgressScreen() {
+        return document.querySelector('.quiz-progress');
+    }
+
+    function createPlanCard(plan, { featured = false, badge = '', buttonId = '' } = {}) {
+        const price = getPriceByKey(plan.key);
+        const borderStyle = featured
+            ? '1px solid #7c3aed'
+            : '1px solid rgba(15,23,42,0.08)';
+        const buttonStyle = featured
+            ? 'width:100%;border:none;border-radius:999px;background:#7c3aed;color:#fff;padding:14px 18px;font-size:15px;font-weight:700;cursor:pointer;'
+            : 'width:100%;border:1px solid rgba(15,23,42,0.16);border-radius:999px;background:transparent;color:#0f172a;padding:14px 18px;font-size:15px;font-weight:700;cursor:pointer;';
+
+        return `
+            <div style="border:${borderStyle};border-radius:20px;padding:18px;text-align:left;display:flex;flex-direction:column;gap:14px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                    <strong style="font-size:${featured ? '18px' : '17px'};color:#0f172a;">${plan.label}</strong>
+                    ${badge ? `<span style="background:#7c3aed;color:#fff;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700;white-space:nowrap;">${badge}</span>` : ''}
+                </div>
+                <div style="font-size:${featured ? '28px' : '24px'};font-weight:800;line-height:1;color:#0f172a;">${price}</div>
+                <button id="${buttonId}" type="button" style="${buttonStyle}">Начать</button>
+            </div>
+        `;
+    }
+
+    function bindPlanButtons(resultType, plans) {
+        plans.forEach((plan) => {
+            document.getElementById(plan.buttonId)?.addEventListener('click', () => {
+                trackQuizEvent('quiz_cta_clicked', {
+                    result_type: resultType,
+                    cta: plan.analyticsCta
+                });
+                window.location.href = plan.href;
+            });
+        });
+    }
+
+    function renderOfferScreen({ icon, title, text, recommended = null, secondary = [], resultType = 'pricing' }) {
+        const questionScreen = getQuestionScreen();
+        const resultScreen = getResultScreen();
+        const progressScreen = getProgressScreen();
+
+        if (!questionScreen || !resultScreen) {
+            return;
+        }
+
+        const planConfigs = [];
+        let cardsMarkup = '';
+
+        if (recommended) {
+            const primaryConfig = {
+                ...recommended,
+                buttonId: 'quiz-plan-primary',
+                analyticsCta: recommended.key
+            };
+            planConfigs.push(primaryConfig);
+            cardsMarkup += createPlanCard(primaryConfig, {
+                featured: true,
+                badge: recommended.badge || '',
+                buttonId: primaryConfig.buttonId
+            });
+        }
+
+        secondary.forEach((plan, index) => {
+            const config = {
+                ...plan,
+                buttonId: `quiz-plan-secondary-${index}`,
+                analyticsCta: plan.key
+            };
+            planConfigs.push(config);
+            cardsMarkup += createPlanCard(config, {
+                featured: false,
+                buttonId: config.buttonId
+            });
+        });
+
+        questionScreen.style.display = 'none';
+        resultScreen.style.display = '';
+
+        if (progressScreen) {
+            progressScreen.style.display = 'none';
+        }
+
+        resultScreen.innerHTML = `
+            <div class="quiz-result__icon">${icon}</div>
+            <h2>${title}</h2>
+            <p>${text}</p>
+            <div class="quiz-result__actions" style="gap:14px;">
+                ${cardsMarkup}
+            </div>
+        `;
+
+        bindPlanButtons(resultType, planConfigs);
+    }
+
     function updateProgress() {
         const progressText = document.getElementById('quiz-progress-text');
         const progressBar = document.getElementById('quiz-progress-bar');
@@ -279,6 +376,11 @@
 
         questionScreen.style.display = '';
         resultScreen.style.display = 'none';
+
+        const progressScreen = getProgressScreen();
+        if (progressScreen) {
+            progressScreen.style.display = '';
+        }
 
         title.textContent = question.title;
         options.innerHTML = '';
@@ -341,69 +443,21 @@
     }
 
     async function showResult() {
-        const questionScreen = getQuestionScreen();
-        const resultScreen = getResultScreen();
         const result = calculateResult(selectedAnswers);
 
-        if (!questionScreen || !resultScreen) {
-            return;
-        }
-
         await loadPricingRegion();
-
-        const recommendedPrice = getPriceByKey(result.recommended.key);
-        const recommendedCard = `
-            <div style="border:1px solid #7c3aed;border-radius:20px;padding:18px;text-align:left;display:flex;flex-direction:column;gap:14px;">
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-                    <strong style="font-size:18px;color:#0f172a;">${result.recommended.label}</strong>
-                    <span style="background:#7c3aed;color:#fff;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700;white-space:nowrap;">${result.recommended.badge}</span>
-                </div>
-                <div style="font-size:28px;font-weight:800;line-height:1;color:#0f172a;">${recommendedPrice}</div>
-                <button id="quiz-plan-primary" type="button" style="width:100%;border:none;border-radius:999px;background:#7c3aed;color:#fff;padding:14px 18px;font-size:15px;font-weight:700;cursor:pointer;">Начать</button>
-            </div>
-        `;
-
-        const secondaryCards = result.secondary.map((plan, index) => `
-            <div style="border:1px solid rgba(15,23,42,0.08);border-radius:20px;padding:18px;text-align:left;display:flex;flex-direction:column;gap:14px;">
-                <strong style="font-size:17px;color:#0f172a;">${plan.label}</strong>
-                <div style="font-size:24px;font-weight:800;line-height:1;color:#0f172a;">${getPriceByKey(plan.key)}</div>
-                <button id="quiz-plan-secondary-${index}" type="button" style="width:100%;border:1px solid rgba(15,23,42,0.16);border-radius:999px;background:transparent;color:#0f172a;padding:14px 18px;font-size:15px;font-weight:700;cursor:pointer;">Начать</button>
-            </div>
-        `).join('');
-
-        questionScreen.style.display = 'none';
-        resultScreen.style.display = '';
-        resultScreen.innerHTML = `
-            <div class="quiz-result__icon">${result.icon}</div>
-            <h2>${result.title}</h2>
-            <p>${result.text}</p>
-            <div class="quiz-result__actions" style="gap:14px;">
-                ${recommendedCard}
-                ${secondaryCards}
-            </div>
-        `;
+        renderOfferScreen({
+            icon: result.icon,
+            title: result.title,
+            text: result.text,
+            recommended: result.recommended,
+            secondary: result.secondary,
+            resultType: result.type
+        });
 
         trackQuizEvent('quiz_completed', {
             result_type: result.type,
             answers_count: selectedAnswers.length
-        });
-
-        resultScreen.querySelector('#quiz-plan-primary')?.addEventListener('click', () => {
-            trackQuizEvent('quiz_cta_clicked', {
-                result_type: result.type,
-                cta: 'recommended'
-            });
-            window.location.href = result.recommended.href;
-        });
-
-        result.secondary.forEach((plan, index) => {
-            resultScreen.querySelector(`#quiz-plan-secondary-${index}`)?.addEventListener('click', () => {
-                trackQuizEvent('quiz_cta_clicked', {
-                    result_type: result.type,
-                    cta: plan.label
-                });
-                window.location.href = plan.href;
-            });
         });
 
         if (!hasSavedResult) {
@@ -450,6 +504,22 @@
         resetQuiz();
     }
 
+    async function openPricing() {
+        await loadPricingRegion();
+        renderOfferScreen({
+            icon: '✨',
+            title: 'Выберите удобный старт',
+            text: 'Сравните тарифы и откройте тот формат, который подходит вам по темпу и задаче.',
+            recommended: null,
+            secondary: [
+                { key: 'course', label: 'Курс 7 уроков', href: CONTACT_URL },
+                { key: 'pack3', label: 'Пакет 3 сессии', href: CONTACT_URL },
+                { key: 'consult', label: 'Вайб-сессия', href: CONTACT_URL }
+            ],
+            resultType: 'pricing'
+        });
+    }
+
     function bindEvents() {
         const prevButton = document.getElementById('quiz-prev');
         const nextButton = document.getElementById('quiz-next');
@@ -488,6 +558,7 @@
         calculateResult,
         saveQuizResult,
         openQuiz,
+        openPricing,
         resetQuiz
     };
 })();

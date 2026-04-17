@@ -29,6 +29,19 @@ function trackAppEvent(name, props = {}) {
     }
 }
 
+function getInitialEntryMode() {
+    try {
+        const params = new URLSearchParams(window.location.search);
+        const entry = String(params.get('entry') || '').trim().toLowerCase();
+
+        if (entry === 'quiz' || entry === 'pricing') {
+            return entry;
+        }
+    } catch (error) {}
+
+    return null;
+}
+
 async function renderDays() {
     const container = document.getElementById('days-container');
     if (!container) return;
@@ -189,7 +202,7 @@ function updateAppHeader(sectionId) {
     }
 }
 
-function showAppSection(sectionId, activeTabId) {
+function showAppSection(sectionId, activeTabId, options = {}) {
     const sectionIds = ['home-section', 'about-section', 'quiz-section', 'course-section', 'guides-section', 'profile-section'];
     const hiddenChromeSections = ['about-section', 'quiz-section'];
     const isChromeHidden = hiddenChromeSections.includes(sectionId);
@@ -223,8 +236,12 @@ function showAppSection(sectionId, activeTabId) {
     document.body.classList.toggle('quiz-open', sectionId === 'quiz-section');
     document.body.dataset.appSection = sectionId;
 
-    if (sectionId === 'quiz-section' && window.quizApp?.openQuiz) {
-        window.quizApp.openQuiz();
+    if (sectionId === 'quiz-section') {
+        if (options.quizMode === 'pricing' && window.quizApp?.openPricing) {
+            window.quizApp.openPricing();
+        } else if (window.quizApp?.openQuiz) {
+            window.quizApp.openQuiz();
+        }
     }
 
     if (sectionId === 'guides-section') {
@@ -300,13 +317,13 @@ function setupTabNavigation() {
     });
 
     const quickActions = [
-        ['btn-about', 'about-section', null],
-        ['card-quiz', 'quiz-section', null],
-        ['card-continue', 'course-section', 'tab-course'],
-        ['profile-progress-link', 'course-section', 'tab-course']
+        ['btn-about', 'about-section', null, {}],
+        ['card-quiz', 'quiz-section', null, { quizMode: 'quiz' }],
+        ['card-continue', 'course-section', 'tab-course', {}],
+        ['profile-progress-link', 'course-section', 'tab-course', {}]
     ];
 
-    quickActions.forEach(([triggerId, sectionId, tabId]) => {
+    quickActions.forEach(([triggerId, sectionId, tabId, options]) => {
         const trigger = document.getElementById(triggerId);
         if (!trigger) return;
 
@@ -325,7 +342,7 @@ function setupTabNavigation() {
                 trackAppEvent('cta_continue_clicked', { source: 'home_card' });
             }
 
-            showAppSection(sectionId, tabId);
+            showAppSection(sectionId, tabId, options);
         });
     });
 
@@ -366,8 +383,6 @@ function setupTabNavigation() {
             });
         });
     }
-
-    showAppSection('home-section', 'tab-home');
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -405,6 +420,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     initializeUserProfile();
     setupTabNavigation();
+
+    const initialEntryMode = getInitialEntryMode();
+    if (initialEntryMode === 'quiz' || initialEntryMode === 'pricing') {
+        showAppSection('quiz-section', null, { quizMode: initialEntryMode });
+    } else {
+        showAppSection('home-section', 'tab-home');
+    }
 
     if (typeof DAYS_CONFIG !== 'undefined') {
         await renderDays();
