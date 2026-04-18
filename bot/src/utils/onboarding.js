@@ -148,7 +148,7 @@ export async function markMessageSent(userId, messageType) {
  */
 export function getMessage1Keyboard() {
     const keyboard = new InlineKeyboard();
-    keyboard.url('Написать Евгению', 'https://t.me/koreakim88');
+    keyboard.url('Обсудить задачу', 'https://t.me/koreakim88');
     return keyboard;
 }
 
@@ -167,14 +167,11 @@ export function getMessage2Keyboard() {
  * @returns {string}
  */
 export function getMessage1Text() {
-    return `Добрый день 👋
+    return `Здравствуйте 👋
 
-Надеюсь материалы курса оказались полезными. Если пробовали
-настройки из Дня 0 или работали с промптами — буду рад услышать
-как прошло.
+Если Вы уже успели посмотреть материалы, возможно, появились мысли, вопросы или идея, которую хочется обсудить.
 
-Если возникли вопросы или появились идеи для своего проекта —
-пишите напрямую, разберёмся вместе 🙌`;
+Если хотите понять, какой формат подойдёт именно под Вашу задачу, напишите мне напрямую — помогу сориентироваться.`;
 }
 
 /**
