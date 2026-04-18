@@ -132,66 +132,9 @@
         `;
     }
 
-    function renderNextStep() {
-        const container = document.getElementById('profile-next-step');
-        if (!container) return;
-
-        const access = window.userAccess || { max_day: 0 };
-        const progress = getNormalizedProgress();
-
-        const nextDay = Object.entries(DAYS_CONFIG)
-            .filter(([id]) => id !== 'day-0')
-            .find(([id, info]) => {
-                const dayNum = info.order;
-                const isAccessible = dayNum <= Number(access.max_day || 0);
-                const isCompleted = progress[id]?.completed;
-                return isAccessible && !isCompleted;
-            });
-
-        const allCompleted = Object.entries(DAYS_CONFIG)
-            .filter(([id]) => id !== 'day-0')
-            .every(([id]) => progress[id]?.completed === true);
-
-        if (Number(access.max_day || 0) === 0) {
-            container.innerHTML = `
-                <h3>Начните с бесплатного урока</h3>
-                <p class="text-secondary">Откройте вводный день и посмотрите, как устроен формат обучения.</p>
-                <a class="btn-primary" href="day.html?id=day-0">Открыть урок</a>
-            `;
-            return;
-        }
-
-        if (allCompleted) {
-            container.innerHTML = `
-                <h3>Курс завершён! 🎉</h3>
-                <p class="text-secondary">Вы прошли все 7 дней курса</p>
-                <button id="profile-finish-contact" class="btn-primary" type="button">Связаться с преподавателем</button>
-            `;
-            return;
-        }
-
-        if (nextDay) {
-            const [dayId, info] = nextDay;
-            container.innerHTML = `
-                <h3>Продолжите обучение</h3>
-                <p class="text-secondary">Следующий день: ${info.title}</p>
-                <a class="btn-primary" href="day.html?id=${dayId}">Продолжить</a>
-            `;
-            return;
-        }
-
-        container.innerHTML = `
-            <h3>Продолжите обучение</h3>
-            <p class="text-secondary">Перейдите к курсу и выберите доступный день.</p>
-            <button id="profile-open-course" class="btn-primary" type="button">Перейти к курсу</button>
-        `;
-    }
-
     function bindProfileActions() {
         const contactBtn = document.getElementById('profile-contact-btn');
         const courseBtn = document.getElementById('profile-course-btn');
-        const finishContactBtn = document.getElementById('profile-finish-contact');
-        const openCourseBtn = document.getElementById('profile-open-course');
 
         const contactTeacherHandler = () => {
             if (window.Haptic?.medium) {
@@ -219,14 +162,6 @@
 
         if (courseBtn) {
             courseBtn.onclick = openCourseHandler;
-        }
-
-        if (finishContactBtn) {
-            finishContactBtn.onclick = contactTeacherHandler;
-        }
-
-        if (openCourseBtn) {
-            openCourseBtn.onclick = openCourseHandler;
         }
     }
 
@@ -275,7 +210,6 @@
 
         renderUserCard();
         renderProgressBlock();
-        renderNextStep();
         bindProfileActions();
 
         const progress = getNormalizedProgress();
@@ -295,7 +229,6 @@
         initProfile,
         renderUserCard,
         renderProgressBlock,
-        renderNextStep,
         getAccessBadge
     };
 
