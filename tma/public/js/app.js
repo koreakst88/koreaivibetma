@@ -29,6 +29,26 @@ function trackAppEvent(name, props = {}) {
     }
 }
 
+function openExternalUrl(url) {
+    if (!url) {
+        return;
+    }
+
+    try {
+        if (window.Telegram?.WebApp?.openTelegramLink && /^(https?:\/\/)?t\.me\//i.test(url)) {
+            window.Telegram.WebApp.openTelegramLink(url);
+            return;
+        }
+
+        if (window.Telegram?.WebApp?.openLink) {
+            window.Telegram.WebApp.openLink(url);
+            return;
+        }
+    } catch (error) {}
+
+    window.open(url, '_blank', 'noopener,noreferrer');
+}
+
 function getInitialEntryMode() {
     try {
         const params = new URLSearchParams(window.location.search);
@@ -361,7 +381,8 @@ function setupTabNavigation() {
     }
 
     document.querySelectorAll('.social-pill').forEach((link) => {
-        link.addEventListener('click', () => {
+        link.addEventListener('click', (event) => {
+            event.preventDefault();
             const label = link.querySelector('.social-pill__label')?.textContent?.toLowerCase() || '';
             const platformMap = {
                 tiktok: 'tiktok',
@@ -372,15 +393,19 @@ function setupTabNavigation() {
             trackAppEvent('social_clicked', {
                 platform: platformMap[label] || label
             });
+
+            openExternalUrl(link.href);
         });
     });
 
     const aboutContactButton = document.querySelector('.about-contact-button');
     if (aboutContactButton) {
-        aboutContactButton.addEventListener('click', () => {
+        aboutContactButton.addEventListener('click', (event) => {
+            event.preventDefault();
             trackAppEvent('contact_clicked', {
                 source: 'about'
             });
+            openExternalUrl(aboutContactButton.href);
         });
     }
 }
