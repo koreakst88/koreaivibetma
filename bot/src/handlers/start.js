@@ -33,6 +33,8 @@ export async function handleStart(ctx) {
     const pricingUrl = appendEntryParam(tmaUrl, 'pricing');
 
     const keyboard = new InlineKeyboard()
+        .webApp('Открыть кабинет', tmaUrl)
+        .row()
         .webApp('Подобрать формат', quizUrl)
         .row()
         .webApp('Посмотреть тарифы', pricingUrl);
@@ -44,7 +46,12 @@ export async function handleStart(ctx) {
 - Вводный урок
 - Библиотека промптов и шпаргалки
 
-Выбери с чего начать:
+Здесь можно:
+- открыть материалы и кабинет
+- подобрать подходящий формат
+- посмотреть тарифы
+
+Выберите, что хотите сделать:
     `.trim();
 
     await ctx.reply(message, {
