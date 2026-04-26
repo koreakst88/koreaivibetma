@@ -99,6 +99,176 @@ function updateLessonProgressUI() {
     }
 }
 
+function copyLessonText(text, button) {
+    const originalText = button.textContent;
+
+    const markCopied = () => {
+        button.textContent = 'Скопировано';
+        button.classList.add('is-copied');
+
+        if (window.Haptic?.light) {
+            window.Haptic.light();
+        }
+
+        window.setTimeout(() => {
+            button.textContent = originalText;
+            button.classList.remove('is-copied');
+        }, 1800);
+    };
+
+    if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(text).then(markCopied).catch(() => {
+            fallbackCopyLessonText(text, markCopied);
+        });
+        return;
+    }
+
+    fallbackCopyLessonText(text, markCopied);
+}
+
+function fallbackCopyLessonText(text, onSuccess) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.top = '-1000px';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+
+    try {
+        document.execCommand('copy');
+        onSuccess();
+    } catch (error) {
+        console.warn('Copy failed:', error);
+    } finally {
+        textarea.remove();
+    }
+}
+
+function enhanceCodeBlocks(container) {
+    container.querySelectorAll('pre').forEach((pre) => {
+        if (pre.parentElement?.classList.contains('lesson-code-card')) return;
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'lesson-code-card';
+
+        const header = document.createElement('div');
+        header.className = 'lesson-code-card__header';
+        header.innerHTML = '<span>Готовый промпт</span>';
+
+        const copyButton = document.createElement('button');
+        copyButton.type = 'button';
+        copyButton.className = 'lesson-copy-button';
+        copyButton.textContent = 'Скопировать';
+        copyButton.addEventListener('click', () => {
+            copyLessonText(pre.textContent.trim(), copyButton);
+        });
+
+        header.appendChild(copyButton);
+        pre.parentNode.insertBefore(wrapper, pre);
+        wrapper.appendChild(header);
+        wrapper.appendChild(pre);
+    });
+}
+
+function wrapLessonTables(container) {
+    container.querySelectorAll('table').forEach((table) => {
+        if (table.parentElement?.classList.contains('lesson-table-scroll')) return;
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'lesson-table-scroll';
+        table.parentNode.insertBefore(wrapper, table);
+        wrapper.appendChild(table);
+    });
+}
+
+function wrapFreeLessonSections(container) {
+    const headings = Array.from(container.querySelectorAll('h2'));
+
+    headings.forEach((heading, index) => {
+        if (heading.closest('.free-lesson-card')) return;
+
+        const card = document.createElement('section');
+        const headingText = heading.textContent.trim();
+        const isStep = headingText.startsWith('Шаг');
+        const isIntro = headingText.includes('Что ты сделаешь');
+        const isResult = headingText.includes('Ты только что сделал');
+        const isContact = headingText.includes('Покажи мне');
+        const isFinalCta = headingText.includes('Хочу научиться');
+
+        card.className = 'free-lesson-card';
+        if (isIntro) card.classList.add('free-lesson-card--intro');
+        if (isStep) card.classList.add('free-lesson-card--step');
+        if (isResult) card.classList.add('free-lesson-card--result');
+        if (isContact) card.classList.add('free-lesson-card--contact');
+        if (isFinalCta) card.classList.add('free-lesson-card--cta');
+
+        if (isStep) {
+            const stepNumber = headingText.match(/Шаг\s+(\d+)/)?.[1];
+            if (stepNumber) {
+                const badge = document.createElement('span');
+                badge.className = 'free-lesson-card__badge';
+                badge.textContent = `Шаг ${stepNumber}`;
+                card.appendChild(badge);
+            }
+        }
+
+        heading.parentNode.insertBefore(card, heading);
+
+        let currentNode = heading;
+        while (currentNode) {
+            const nextNode = currentNode.nextSibling;
+            card.appendChild(currentNode);
+
+            if (nextNode?.nodeType === Node.ELEMENT_NODE && nextNode.tagName === 'H2') {
+                break;
+            }
+
+            currentNode = nextNode;
+        }
+
+        card.style.setProperty('--card-index', index);
+    });
+}
+
+function enhanceFreeLessonContent(container) {
+    container.classList.add('lesson-content--free');
+    container.closest('.lesson-content-shell')?.classList.add('lesson-content-shell--free');
+    wrapFreeLessonSections(container);
+
+    container.querySelectorAll('p').forEach((paragraph) => {
+        const text = paragraph.textContent.trim();
+
+        if (paragraph.querySelector('img')) {
+            paragraph.classList.add('lesson-result-preview');
+        }
+
+        if (text.startsWith('Результат шага:')) {
+            paragraph.classList.add('lesson-result-pill');
+        }
+
+        if (text === 'Что сделать:') {
+            paragraph.classList.add('lesson-action-label');
+        }
+    });
+
+    container.querySelectorAll('a[href^="https://t.me/"]').forEach((link) => {
+        link.classList.add('lesson-telegram-cta');
+        link.setAttribute('target', '_blank');
+        link.setAttribute('rel', 'noopener noreferrer');
+    });
+}
+
+function enhanceLessonContent(container, dayId) {
+    enhanceCodeBlocks(container);
+    wrapLessonTables(container);
+
+    if (dayId === 'day-0') {
+        enhanceFreeLessonContent(container);
+    }
+}
+
 // 1. Основная загрузка
 async function loadDayContent() {
     // Получаем ID дня из URL
@@ -184,6 +354,7 @@ async function loadDayContent() {
         // Рендерим через marked.js
         const html = marked.parse(markdown);
         container.innerHTML = html;
+        enhanceLessonContent(container, dayId);
         if (typeof hideLoader === 'function') {
             hideLoader('day-content');
         }
