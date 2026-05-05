@@ -61,6 +61,51 @@
         return data.id;
     }
 
+    async function ensureUserId(telegramUserId, telegramUser = null) {
+        if (!telegramUserId) {
+            return null;
+        }
+
+        const existingUserId = await resolveUserId(telegramUserId);
+        if (existingUserId) {
+            return existingUserId;
+        }
+
+        const client = getClient();
+        if (!client) {
+            return null;
+        }
+
+        const now = new Date().toISOString();
+        const payload = {
+            telegram_user_id: telegramUserId,
+            first_name: telegramUser?.first_name || null,
+            last_name: telegramUser?.last_name || null,
+            username: telegramUser?.username || null,
+            photo_url: telegramUser?.photo_url || null,
+            language_code: telegramUser?.language_code || null,
+            first_open_at: now,
+            last_seen_at: now
+        };
+
+        const { data, error } = await client
+            .from('users')
+            .upsert(payload, { onConflict: 'telegram_user_id' })
+            .select('id')
+            .single();
+
+        if (error) {
+            throw error;
+        }
+
+        if (data?.id) {
+            resolvedUserIds.set(telegramUserId, data.id);
+            return data.id;
+        }
+
+        return null;
+    }
+
     async function initUser(telegramUser) {
         try {
             if (!telegramUser?.id) {
@@ -294,7 +339,7 @@
         }
     }
 
-    async function saveQuizResult(telegramUserId, quizType, answers, resultType) {
+    async function saveQuizResult(telegramUserId, quizType, answers, resultType, telegramUser = null) {
         try {
             if (!telegramUserId || !quizType) {
                 return null;
@@ -305,7 +350,7 @@
                 return null;
             }
 
-            const userId = await resolveUserId(telegramUserId);
+            const userId = await ensureUserId(telegramUserId, telegramUser);
             if (!userId) {
                 return null;
             }

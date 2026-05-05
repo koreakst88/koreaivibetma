@@ -433,19 +433,33 @@
     }
 
     async function saveQuizResult(result) {
-        const telegramUserId = window.currentTelegramUserId || window.Telegram?.WebApp?.initDataUnsafe?.user?.id || null;
+        const telegramUser = window.currentTelegramUser || window.Telegram?.WebApp?.initDataUnsafe?.user || null;
+        const telegramUserId = window.currentTelegramUserId || telegramUser?.id || null;
 
         if (!telegramUserId || !window.supabaseStore?.saveQuizResult) {
             return null;
         }
 
-        return await window.supabaseStore.saveQuizResult(telegramUserId, 'fit_check', selectedAnswers, result.type);
+        return await window.supabaseStore.saveQuizResult(telegramUserId, 'fit_check', selectedAnswers, result.type, telegramUser);
     }
 
     async function showResult() {
         const result = calculateResult(selectedAnswers);
+        let savedResult = null;
+
+        const savePromise = !hasSavedResult
+            ? saveQuizResult(result)
+            : Promise.resolve(null);
 
         await loadPricingRegion();
+        savedResult = await savePromise;
+
+        if (savedResult) {
+            hasSavedResult = true;
+        } else if (!hasSavedResult) {
+            console.warn('Quiz result was not saved to Supabase');
+        }
+
         renderOfferScreen({
             icon: result.icon,
             title: result.title,
@@ -459,11 +473,6 @@
             result_type: result.type,
             answers_count: selectedAnswers.length
         });
-
-        if (!hasSavedResult) {
-            hasSavedResult = true;
-            await saveQuizResult(result);
-        }
 
         notifySuccess();
     }
